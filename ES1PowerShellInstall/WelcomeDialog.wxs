@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <UI Id="WelcomeDialogUI">
+
+      <TextStyle Id="TahomaBig" FaceName="Tahoma" Size="18" Bold="no" Red="255" Green="255" Blue="255" />
+      <TextStyle Id="TahomaHeader" FaceName="Tahoma" Size="16" Bold="no" />
+      <TextStyle Id="TahomaNormal" FaceName="Tahoma" Size="10" />
+      <Property Id="DefaultUIFont" Value="TahomaNormal" />
+
+      <Property Id="Proceed">proceedbtn</Property>
+      <Binary Id="proceedbtn" SourceFile="images/proceedbtn.bmp"/>
+      <Binary Id="headerPic" SourceFile="images/Combined3.bmp"/>
+      <!-- DialogRef Id="SetupDialog"/-->
+      
+      <Dialog Id="WelcomeDialog" Width="400" Height="300" Title="!(loc.ApplicationName)">
+
+        <Control Id="background" Type="Bitmap" Text="bgPic" Height="300" Width="400" X="0" Y="0" TabSkip="no" />
+        <Control Id="header" Type="Bitmap" Text="headerPic" Height="50" Width="400" X="0" Y="0" TabSkip="no" />
+        <Control Id="headerText"  Type="Text" X="10" Y="10" Width="350" Height="40" Transparent="yes" Text="{\TahomaBig}!(loc.WelcomeHeaderText)" />
+        <Control Id="welcomeText"  Type="Text" X="65" Y="50" Width="350" Height="22" Transparent="yes" Text="{\TahomaHeader}!(loc.WelcomeText)" />
+        
+        <Control Id="explanationText1" X="70" Y="75" NoWrap="no" RightAligned="no" Transparent="yes" Type="Text" Width="275" Height="120" Text="{\TahomaNormal}!(loc.WelcomeDlgDescription)" />
+        <Control Id="explanationText2" X="70" Y="150" NoWrap="no" RightAligned="no" Transparent="yes" Type="Text" Width="260" Height="50" Text="{\TahomaNormal}!(loc.WelcomeDlgContinue)" />
+        <Control Id="proceedButton" Type="PushButton" Text="[Proceed]" Height="55" Width="222" X="90" Y="180" Bitmap="yes">
+          
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+
+        <Control Id="cancelButton" Type="PushButton" Text="[Cancel]" Height="40" Width="144" X="135" Y="245" Cancel="yes" Bitmap="yes">
+          <Publish Event="EndDialog" Value="Exit" />
+        </Control>
+
+      </Dialog>
+
+    </UI>
+
+    <InstallUISequence>
+      <Show Dialog="WelcomeDialog" Before="SetupDialog" />
+    </InstallUISequence>
+
+  </Fragment>
+
+  
+</Wix>

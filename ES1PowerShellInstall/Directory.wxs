@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="DesktopFolder" Name="Desktop"/>
+      <Directory Id="ProgramFilesFolder" >
+        
+          <Directory Id="S1INSTALLDIR" Name="EMC SourceOne">
+          <!--Directory Id="ManufacturerFolder" Name="EMC SourceOne"-->
+              <Directory Id="ProductFolder" Name="SourceOne PowerShell">
+                <Directory Id="INSTALLFOLDER" Name="Modules" >
+              <Directory Id="SubModulesFolder" Name="SourceOne_POSH" />
+              </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+  </Fragment>
+</Wix>

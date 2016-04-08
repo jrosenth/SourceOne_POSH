@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <UI Id="SetupDialogUI">
+
+        
+      <DialogRef Id="ProgressDialog"/>
+
+      <Dialog Id="SetupDialog" Width="400" Height="300" Title="!(loc.ApplicationName)">
+
+   
+
+      </Dialog>
+
+    </UI>
+
+    <InstallUISequence>
+      <Show Dialog="SetupDialog" Before="ExecuteAction" />
+    </InstallUISequence>
+  </Fragment>
+</Wix>

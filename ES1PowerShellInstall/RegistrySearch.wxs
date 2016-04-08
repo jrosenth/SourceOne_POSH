@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <Property Id="POWERSHELL3VERSION" Secure="yes">
+      <!-- Supports PowerShell v3 and v4 -->
+      <RegistrySearch Id="PowerShell3VersionSearch"
+                      Key="SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine"
+                      Name="PowerShellVersion"
+                      Root="HKLM"
+                      Type="raw" />
+    </Property>
+  </Fragment>
+
+  <Fragment>
+    <Property Id="INSTALLFOLDER" Secure="yes">
+      <RegistrySearch Id="InstallFolderSearch"
+                      Key="SOFTWARE\[Manufacturer]\SourceOne_POSH"
+                      Name="InstallFolder"
+                      Root="HKLM"
+                      Type="directory" />
+    </Property>
+  </Fragment>
+
+  <Fragment>
+    <Property Id="S1INSTALLDIR" Secure="yes">
+      <RegistrySearch Id="S1InstallFolderSearch"
+                      Key="SOFTWARE\[Manufacturer]\SourceOne"
+                      Name="InstallDir"
+                      Root="HKLM"
+                      Type="directory" />
+    </Property>
+  </Fragment>
+</Wix>

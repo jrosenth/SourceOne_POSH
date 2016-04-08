@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <PropertyRef Id="INSTALLFOLDER" />
+
+    <ComponentGroup Id="RegistryComponents" Directory="INSTALLFOLDER">
+      <Component Id="CmpInstallFolderRemember" Guid="*">
+        <RegistryKey Key="SOFTWARE\[Manufacturer]\SourceOne_POSH" Root="HKLM">
+          <RegistryValue KeyPath="yes" Name="InstallFolder" Type="string" Value="[INSTALLFOLDER]" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

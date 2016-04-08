@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="5" errors="0" failures="2" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2015-12-04" time="17:41:31">
+  <environment user="jrosenthal" machine-name="JROSENTHC30" cwd="E:\ccviews\jrosenthal_PSMainline\ExXtender\Utilities\PS-Scripting\Modules\UnitTests" user-domain="OTG" platform="Microsoft Windows 7 Enterprise |C:\Windows|\Device\Harddisk0\Partition1" nunit-version="2.5.8.0" os-version="6.1.7601" clr-version="4.0.30319.18444" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="Powershell" name="Pester" executed="True" result="Failure" success="False" time="15.6749" asserts="0">
+    <results>
+      <test-suite type="PowerShell" name="SourceOne PowerShell Test Installation and Import " executed="True" result="Success" success="True" time="0.2941" asserts="0">
+        <results>
+          <test-case name="SourceOne Powershell directory should be in module path" time="0.0964" asserts="0" success="True" result="Success" executed="True" />
+          <test-case name="SourceOne Powershell module should import" time="0.1976" asserts="0" success="True" result="Success" executed="True" />
+        </results>
+      </test-suite>
+      <test-suite type="PowerShell" name="Test DBUtils Cmdlets " executed="True" result="Failure" success="False" time="15.3808" asserts="0">
+        <results>
+          <test-case name="Are we running on SourceOne Master" time="0.6834" asserts="0" success="True" result="Success" executed="True" />
+          <test-case name="Return the Activity DB and Activity SQL server names" time="0.0307" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Expected: value to not be empty</message>
+              <stack-trace>at line: 33 in E:\ccviews\jrosenthal_PSMainline\ExXtender\Utilities\PS-Scripting\Modules\UnitTests\ES1_DBUtils.tests.ps1
+33: 				$actDB[0] | Should Not BeNullOrEmpty
+</stack-trace>
+            </failure>
+          </test-case>
+          <test-case name="Return list of Worker machine(s)" time="14.6667" asserts="0" success="False" result="Failure" executed="True">
+            <failure>
+              <message>Exception calling "Fill" with "1" argument(s): "A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: Named Pipes Provider, error: 40 - Could not open a connection to SQL Server)"</message>
+              <stack-trace>at line: 70 in C:\Program Files (x86)\EMC SourceOne\SourceOne PowerShell\Modules\SourceOne_POSH\ES1_SQLFuncs.psm1</stack-trace>
+            </failure>
+          </test-case>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

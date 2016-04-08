@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+<remoting>yes</remoting>
+<localHost>master</localHost>
+<MasterServer>master</MasterServer>
+<servers>
+	<name>master</name>
+	<serviceCount>12</serviceCount>
+</servers>
+<servers>archiveipm
+<serviceCount>2</serviceCount>
+</servers>
+<services>
+
+  <Object>
+    <Property Name="Name">DCWorkerService</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ES1AddressResolutionService</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExAddressCacheService</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExAsAdmin</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExAsArchive</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExAsIndex</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExAsQuery</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExDocMgmtSvc</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExDocMgmtSvcOA</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExJobDispatcher</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExJobScheduler</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExSearchService</Property>
+    <Property Name="MachineName">MASTER</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ES1AddressResolutionService</Property>
+    <Property Name="MachineName">ARCHIVEIPM</Property>
+  </Object>
+  <Object>
+    <Property Name="Name">ExJobDispatcher</Property>
+    <Property Name="MachineName">ARCHIVEIPM</Property>
+  </Object>
+
+  </services>
+	
+	
+
+
+</settings>
+
+

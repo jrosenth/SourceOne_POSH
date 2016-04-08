@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Version in ModuleVersion.wxi, should match the version in the SourceOne_POSH.psd1 !!   -->
+<!-- ModuleVersion.wxi is auto modified by a script that runs during the prebuild phase     -->
+<?include ModuleVersion.wxi?>
+
+<?define UpgradeCode="f759f4b4-67ba-4455-9f9e-98d98f300bd0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"> 
+	<Product Id="*" Name="EMC SourceOne PowerShell" Language="1033" Version="$(var.ProductVersion)" 
+           Manufacturer="EMC" UpgradeCode="$(var.UpgradeCode)">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." 
+                  AllowSameVersionUpgrades="yes"/>
+    
+    <MediaTemplate EmbedCab="yes" />
+    <PropertyRef Id="POWERSHELLVERSION"/>
+    <PropertyRef Id="POWERSHELL3VERSION" />
+    <PropertyRef Id="S1INSTALLDIR" />
+    
+    <Condition Message="Installing [ProductName] requires PowerShell Version 2.0 or later.">
+      <![CDATA[Installed OR (POWERSHELLVERSION >= "2.0" OR POWERSHELL3VERSION >= "2.0")]]>
+    </Condition>
+    
+    <Feature Id="ModuleFeature" Title="Install EMC SourceOne PowerShell Module" Level="1">
+      <ComponentGroupRef Id="ES1POSHProfile" />
+      <ComponentGroupRef Id="ES1DesktopShortcut" />
+      <ComponentGroupRef Id="ModuleComponents" />
+      <ComponentGroupRef Id="RegistryComponents" />    
+    </Feature>
+
+    <WixVariable Id="WixUIDialogBmp" Value="Images/PSRedefine2.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="Images/EMC_2015.bmp" />
+    <Icon Id="icon.ico" SourceFile="Images\es1poshshortcut.ico"/>
+    <Icon Id="shortcutIcon.exe" SourceFile="$(var.SolutionDir)\$(var.Configuration)\ShortcutIcon.exe"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="!(loc.ExitOptionalText)" />
+
+    <!-- To enable standard look and feel , remove the line below -->
+    <!--UIRef Id="WelcomeDialogUI" /-->
+<!--
+    <Binary Id="bgPic" SourceFile="Images/bg.bmp"/>
+    <Binary Id="cancelbtn" SourceFile="images/cancelbtn.bmp"/>
+    <Property Id="Cancel">cancelbtn</Property>
+-->
+    <UI Id="UserInterface">
+      <Property Id="WIXUI_INSTALLDIR" Value="TARGETDIR" />
+      <Property Id="WixUI_Mode" Value="Custom" />
+      <TextStyle Id="MyBannerFont" FaceName="Tahoma" Size="10" Bold="yes" Red="255" Green="255" Blue="255" />
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="9" Bold="yes" />
+      <TextStyle Id="WixUI_Font_Title"  FaceName="Tahoma" Size="9" Bold="yes" />
+
+      <!-- To enable standard look and feel , enable the line below -->
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+            
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="UserExit" />
+      <DialogRef Id="VerifyReadyDlg"/>
+      
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+      <!-- To enable standard look and feel , enable the line below -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="2"></Publish >
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2"></Publish >
+
+    </UI>
+    <UIRef Id="WixUI_Common" />
+   
+  </Product>
+  	
+</Wix>

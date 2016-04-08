@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="ES1POSHProfile" Directory="INSTALLFOLDER">
+      <Component Id="Profile" Guid="c4de1e39-1a24-4063-9951-81fed2f52ca2">
+        <!--Component Id="Profile" Guid="*" -->
+        <File KeyPath="yes" Source="$(var.SolutionDir)ES1POSHProfile.ps1"  />
+          <File Source="$(var.SolutionDir)\$(var.Configuration)\ShortcutIcon.exe"  />
+        
+        <Environment Id="AppendPSModulePath" Action="set" Name="PSModulePath" Part="last" System="yes" Value="[INSTALLFOLDER]" />
+      </Component>
+    </ComponentGroup>
+    
+      <ComponentGroup Id="ES1DesktopShortcut" Directory="DesktopFolder">
+        <!--Component Id="DesktopShortcut" Guid="8501f4db-93ee-4520-a7d6-0fe2626c1b3b"-->
+        <Component Id="DesktopShortcut32" Guid="*">
+        <Shortcut Id="ES1POSHShortcut32" Name="EMC SourceOne PowerShell (32-bit)"
+            WorkingDirectory="INSTALLFOLDER"
+            Icon="shortcutIcon.exe"
+                  
+            Target="[WindowsFolder]\system32\WindowsPowerShell\v1.0\powershell.exe"
+            Arguments="-NoLogo -NoExit -File &quot;[INSTALLFOLDER]ES1POSHProfile.ps1&quot;"
+               >
+
+        </Shortcut>
+       <RegistryValue Root="HKCU" Key="Software\EMC\SourceOne PowerShell" 
+                      Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+          <Condition> %PROCESSOR_ARCHITECTURE="x86" </Condition>
+      </Component>
+        
+        <Component Id="DesktopShortcut64" Guid="*">
+        <Shortcut Id="ES1POSHShortcut64" Name="EMC SourceOne PowerShell (32-bit)"
+           WorkingDirectory="INSTALLFOLDER"
+           Icon="shortcutIcon.exe"
+                  
+           Target="[WindowsFolder]\sysWOW64\WindowsPowerShell\v1.0\powershell.exe"
+           Arguments="-NoLogo -NoExit -File &quot;[INSTALLFOLDER]ES1POSHProfile.ps1&quot;"
+               >
+
+        </Shortcut>
+        <RegistryValue Root="HKCU" Key="Software\EMC\SourceOne PowerShell"
+                       Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+        <Condition> %PROCESSOR_ARCHITECTURE="AMD64" </Condition>
+        </Component>
+
+    </ComponentGroup>
+  </Fragment>
+</Wix>

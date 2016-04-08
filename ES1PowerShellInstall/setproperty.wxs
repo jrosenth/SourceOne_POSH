@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <Property Id="ARPINSTALLLOCATION" Secure="yes" />
+
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" Sequence="first">
+      <![CDATA[NOT Installed]]>
+    </SetProperty>
+  </Fragment>
+</Wix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  
+	<String Id="YOURLOCID">Your localized string</String>
+  <String Id="ManufacturerName">EMC Corporation</String>
+  <String Id="ApplicationName">EMC SourceOne PowerShell</String>
+  <String Id="WelcomeHeaderText">EMC SourceOne Powershell Setup [ProductVersion]</String>
+  <String Id="WelcomeDlgTitle">{\WixUI_Font_Title}Welcome to EMC SourceOne Powershell Modules Install [ProductVersion]</String>
+  <String Id="WelcomeDlgDescription">The SourceOne PowerShell modules provide access to many functions via an intelligent command line without using the SourceOne Console.  These utilities are supported by Professional Services.</String>
+  <String Id="WelcomeDlgContinue"> Click Proceed to continue installation or Cancel to exit.</String>
+  
+  <String Id="IntroText">Intro Text</String>
+  <String Id="VerifyReadyDlgInstallText">To continue installing !(loc.ApplicationName), click on the "Install" button. If you choose not to install this application, click on the "Cancel" button to exit.</String>
+  <String Id="ProgressDlgTextInstalling">Please wait while !(loc.ApplicationName) Modules are installed. Click on the Cancel button to exit. </String>
+  <String Id="ProgressDlgTitleInstalling">{\MyBannerFont}Installing !(loc.ApplicationName)</String>
+  
+  <String Id="ExitText">Exit Text</String>
+  <String Id="ExitOptionalText">Click on the EMC SourceOne PowerShell shortcut on your desktop to get started</String>
+
+  <String Id="VerifyReadyDlgInstallTitle">{\MyBannerFont}Ready to Install !(loc.ApplicationName)</String>
+</WixLocalization>
