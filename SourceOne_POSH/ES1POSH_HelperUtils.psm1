@@ -76,7 +76,7 @@ function Get-POSHVersionAndArchitecture{
 	
 }
 
-Function Test-IsAdmin   
+Function Test-IsAdminWithPrompt
 {  
 <#     
 .SYNOPSIS     
@@ -144,6 +144,51 @@ the [System.Management.Automation.PSCredential] object is returned by the functi
         Write-Verbose "Passed Administrator check"  
     }  
 }
+
+Function Test-IsAdmin   
+{  
+<#     
+.SYNOPSIS     
+   Function used to detect if current user is an Administrator.  
+     
+.DESCRIPTION   
+   Function used to detect if current user is an Administrator.
+      
+.NOTES     
+    Name: Test-IsAdmin  
+    Author: Boe Prox   
+    DateCreated: 30April2011  
+	From : https://gallery.technet.microsoft.com/scriptcenter/1b5df952-9e10-470f-ad7c-dc2bdc2ac946  
+      
+.EXAMPLE     
+    Test-IsAdmin  
+      
+   
+Description   
+-----------       
+Command will check the current user to see if an Administrator. 
+#>  
+    [cmdletbinding()]  
+    Param()  
+      
+    [bool] $result=$false
+
+    Write-Verbose "Checking to see if current user context is Administrator"  
+    If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
+    {  
+        Write-Host "You are not currently running this under an Administrator account! `nThere is potential that this command could fail if not running under an Administrator account.`nStart SourceOne PowerShell with `"Run as administrator`"" -ForegroundColor red
+        
+          
+    }  
+    Else   
+    {  
+        Write-Verbose "Passed Administrator check"  
+        $result=$true
+
+    }  
+
+    $result
+}
 #====================================================================
 #
 
@@ -190,6 +235,229 @@ function Test-PsRemoting
    
     $true   
 } 
+
+<#
+.Synopsis
+Verify Active Directory credentials
+
+.DESCRIPTION
+This function takes a user name and a password as input and will verify if the combination is correct. The function returns a boolean based on the result.
+
+.NOTES   
+Name: Test-ADCredential
+Author: Jaap Brasser
+Version: 1.0
+DateUpdated: 2013-05-10
+
+.PARAMETER UserName
+The samaccountname of the Active Directory user account
+	
+.PARAMETER Password
+The password of the Active Directory user account
+
+.EXAMPLE
+Test-ADCredential -username jaapbrasser -password Secret01
+
+Description:
+Verifies if the username and password provided are correct, returning either true or false based on the result
+#>
+function Test-ADCredential {
+    [CmdletBinding()]
+    Param
+    (
+        [string]$UserName,
+        [string]$Password
+    )
+    if (!($UserName) -or !($Password)) {
+        Write-Warning 'Test-ADCredential: Please specify both user name and password'
+    } else {
+        Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+        $DS = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('domain')
+        $DS.ValidateCredentials($UserName, $Password)
+    }
+}
+
+
+<#
+.SYNOPSIS
+	Helper wrapper around Powershell Send-MailMessage cmdlet
+.DESCRIPTION
+    Helper wrapper around Powershell Send-MailMessage cmdlet
+  
+.OUTPUT
+
+.EXAMPLE
+
+#>
+function Send-Email {
+  [CmdletBinding()]
+    Param
+    (
+		[Parameter(Mandatory=$false)]
+		[Alias('ini')]
+		[string] $INIFile="",
+        [Parameter(Mandatory=$false)]
+		[Alias('sub')]
+        [string] $Subject = '',
+
+        [Parameter(Mandatory=$true)]
+        [string] $Body = '',
+
+        [Parameter(Mandatory=$true)] [ValidateSet('Text','Html')]
+        [string] $Type = 'Text',
+
+        [Parameter(Mandatory=$false)] [ValidateSet('Normal','Low','High')]
+		[Alias('pri')]
+        [string] $Priority = 'Normal',
+        
+        [Parameter(Mandatory=$false)]
+		[Alias('atts')]
+        $Attachments,  # Can be a Comma-delimited String or an Array
+        
+        [Parameter(Mandatory=$false)]
+		[Alias('sprefix')]
+        [string] $SubjectPrefix            
+    )
+
+BEGIN {
+
+	# get script location, load SMTP defaults from it...
+	$scriptDirectory  = Split-Path -parent $PSCommandPath
+	$INIDefaults = join-path $scriptDirectory 'Common-Config.ini'
+
+	# Use the INI file passed in via command line, or the default one
+	if ($INIFile -and (Test-Path $INIFile))
+	{
+		$hConfig = Get-IniContent $INIFile
+	}
+	else
+	{
+		Write-Verbose "$($MyInvocation.MyCommand.Name):: using default settings in $($INIDefaults)"
+		$hConfig = Get-IniContent $INIDefaults
+	}
+}
+
+PROCESS {
+
+	if ($hConfig)
+	{
+		$EmailServer=$hConfig["SMTPSERVER"]["SMTP_SERVER"]
+		$To=$hConfig["EMAILADDRESSES"]["SMTP_TO"]
+		$From=$hConfig["EMAILADDRESSES"]["SMTP_FROM"]
+		$CC=$hConfig["EMAILADDRESSES"]["SMTP_CC"]
+		$SubPrefix=$hConfig["EMAILCONTENT"]["EMAIL_SUBJECT_PREFIX"]
+	}
+
+    if ($EmailServer -and $From -and $To)
+    {
+        # Convert SMTP_TO to an Array
+        if ($To.Contains(','))
+        {
+            $aTo = $To.Split(',')
+        }
+        else
+        {
+            $aTo = ($To)
+        }             
+
+        if ($SubPrefix)
+        {
+            $Subject = "$SubPrefix $Subject"
+        } 
+    
+        if ($SubjectPrefix)
+        {
+            $Subject = "$SubjectPrefix $Subject"
+        }     
+
+        # Assemble Command Text    
+        $cmdtext = 'Send-MailMessage -ErrorAction Stop -SmtpServer $EmailServer -Subject $Subject -Priority $Priority -Body $Body -From $From -To $aTo'
+        
+        # Convert SMTP_CC to an Array    
+        if ($CC)
+        {
+            if ($CC.Contains(','))
+            {
+                $aCc = $CC.Split(',')
+            }
+            else
+            {
+                $aCc = ($CC)
+            }              
+            $cmdtext += ' -Cc $aCc'
+        }
+        
+        if ($Type -eq 'Html')
+        {
+            $cmdtext += ' -BodyAsHtml'
+        }
+        
+        if ($Attachments)
+        {
+            if ($Attachments -is [System.Array])
+            {
+                $aFiles = $Attachments            
+            }
+            else
+            {
+                if ($Attachments.Contains(','))
+                {
+                    $aFiles = $Attachments.Split(',')
+                }
+                else
+                {
+                    $aFiles = ($Attachments)
+                }
+            }
+            
+            $aFilesToAttach = @()
+            foreach ($file in $aFiles)
+            {
+                if (Test-Path $file.Trim())
+                {
+                    $aFilesToAttach += $file.Trim()
+                }
+                else
+                {
+                    Write-Error "File does not exist, cannot add as email attachment:  $($file)"
+					return $false
+                }
+            }
+            
+            if ($aFilesToAttach.Length -gt 0)
+            {
+                $cmdtext += ' -Attachments $aFilesToAttach'
+            }         
+        }            
+        
+        Try
+        {
+            Invoke-Expression -Command "$cmdtext"
+            Write-Verbose "Sent Email:  $($Subject)"
+        }
+        Catch
+        {
+            Write-Error "Failed To Send Email:  $($Subject), $($_.Exception.Message) " 
+            return $false
+        }
+        
+    }
+    else
+    {
+        Write-Error "Configuration does not support sending email message: $($Subject)"
+		Write-Error "Check input parameters !"
+		return $false
+    }
+
+	$true
+
+}
+
+END {}
+
+}
+
+
 #
 #   Public Exports
 #

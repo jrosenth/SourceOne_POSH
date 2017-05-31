@@ -29,9 +29,9 @@ Describe "Test DBUtils Cmdlets " {
 		It "Return the Activity DB and Activity SQL server names" {
 				$actDB =  Get-ES1ActivityDatabase
 
-				$actDB.Length | Should be 2
-				$actDB[0] | Should Not BeNullOrEmpty
-				$actDB[1] | Should Not BeNullOrEmpty
+				$actDB.Length | Should be 1
+				$actDB.DBServer | Should Not BeNullOrEmpty
+				$actDB.DBName | Should Not BeNullOrEmpty
 
 			
 		}

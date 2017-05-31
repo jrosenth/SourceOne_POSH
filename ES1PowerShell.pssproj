@@ -8,9 +8,9 @@
     <RootNamespace>MyApplication</RootNamespace>
     <AssemblyName>MyApplication</AssemblyName>
     <Name>ES1PowerShell</Name>
-    <Author>jay </Author>
-    <CompanyName />
-    <Copyright />
+    <Author>Jay Rosenthal</Author>
+    <CompanyName>Dell Technologies</CompanyName>
+    <Copyright>2017 Dell Technologies</Copyright>
     <Description />
     <Guid>4ac75d75-676c-4699-bd24-ea91f7422d44</Guid>
   </PropertyGroup>
@@ -34,8 +34,18 @@
   <ItemGroup>
     <Compile Include="ES1POSHProfile.ps1" />
     <Compile Include="SourceOne_POSH\ES1_ArchiveFolder.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_DefaultCSS.txt" />
+    <Compile Include="SourceOne_POSH\ES1_HealthChecks.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_HTML.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_IndexHealth.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_MasterRoleUtils.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_SuspendResume.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_VolumeHealth.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_WorkerRolesUtils.psm1" />
+    <Compile Include="SourceOne_POSH\ExternalUtils.psm1" />
     <Compile Include="SourceOne_POSH\folderdefaults.xml" />
     <Compile Include="UnitTests\ES1PowerShell.tests.ps1" />
+    <Compile Include="UnitTests\ES1_Configuration.Tests.ps1" />
     <Compile Include="UnitTests\ES1_DBUtils.tests.ps1" />
     <Compile Include="SourceOne_POSH\ES1POSH_HelperUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_Configuration.psm1" />
@@ -51,6 +61,8 @@
     <Compile Include="SourceOne_POSH\ES1_Services.psm1" />
     <Compile Include="SourceOne_POSH\ES1_Jobs.psm1" />
     <Compile Include="SourceOne_POSH\SourceOne_POSH.psd1" />
+    <Compile Include="UnitTests\ES1_Jobs.tests.ps1" />
+    <Compile Include="UnitTests\ES1_Services.tests.ps1" />
     <Compile Include="UnitTests\MockTests.tests.ps1" />
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,8 @@
 	 Organization: 	EMC Corp.
 	 Filename:     	ES1_Configuration.psm1
 	
-	Copyright (c) 2015 EMC Corporation.  All rights reserved.
+	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
+	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -18,7 +19,7 @@
 
 #>
 
-#requires -Version 2
+#requires -Version 4
 
 <#
 .SYNOPSIS
@@ -32,7 +33,7 @@ files in the S1 installation directory
 .EXAMPLE
 
 #>
-function Get-ES1Executables
+function Show-ES1Executables
 {
 [CmdletBinding()]
 param( )
@@ -113,7 +114,7 @@ process {
 					if ($remoteErr)
 					{
 						write-warning $remoteErr
-						$props = @{'PSComputerName'=$server;'FileName'=$remoteErr ;'FileVersion'="ERROR"}
+						$props = [ordered]@{'PSComputerName'=$server;'FileName'=$remoteErr ;'FileVersion'="ERROR"}
 						$AllBinaries += New-object -TypeName PSObject -Prop $props
 					}
 					else
@@ -124,7 +125,8 @@ process {
 				else
 				{
 					write-warning "**** Ps Remoting is not enabled on remote $server ******"
-
+					$props = [ordered]@{'PSComputerName'=$server;'FileName'='NA' ;'FileVersion'="Unreachable - Powershell remoting not enabled"}
+					$AllBinaries += New-object -TypeName PSObject -Prop $props
 				}
 			}
 		}
@@ -132,7 +134,7 @@ process {
 		{
 			Write-Warning "Error Reading registry on machine : $server"
 			Write-Warning "Make sure the machine is up and reachable on the network"
-			$props = @{'PSComputerName'=$server;'FileName'=$_.Exception.Message ;'FileVersion'="NA"}
+			$props = [ordered]@{'PSComputerName'=$server;'FileName'=$_.Exception.Message ;'FileVersion'="NA"}
 			$AllBinaries += New-object -TypeName PSObject -Prop $props
 
 			continue
@@ -140,7 +142,11 @@ process {
 
 	} 
 
-	$AllBinaries | select-object PSComputerName, FileName, FileVersion | Format-Table -AutoSize #| Out-String -Width 10000
+	#$AllBinaries | select-object PSComputerName, FileName, FileVersion | Format-Table -AutoSize #| Out-String -Width 10000
+	
+	# Now that POSH 4 or greater is required the [ordered] type above should mean the select to order things is not needed anymore
+	
+	$AllBinaries | Format-Table -AutoSize #| Out-String -Width 10000
 }
 end{}
 
@@ -467,9 +473,9 @@ function Get-ES1ActivityObj
  Get-ES1ActivityObj 
 .DESCRIPTION
 This function will retreive the SourceOne SQL server and activity DB Name into
-the variables $s1ActServer and $s1actDb.>
+the variables $s1ActServer and $s1actDb
 .PARAMETER <Force>
-<the Force parameter will cause values to be updated/refreshed>
+the Force parameter will cause values to be updated/refreshed>
 .EXAMPLE
 Get-ES1ActivityObj
 
@@ -502,7 +508,7 @@ try
 		$script:s1ActServer = (Get-ItemProperty -Path $s1R).Server_JDF
 		$script:s1actDb = (Get-ItemProperty -Path $s1R).DB_JDF
 
-		if ($script:s1ActServer -eq $null)
+		if (!($script:s1ActServer))
 		{
 			$script:s1ActServer = Read-Host "Information cannot be retrieved from the registry, enter the name of the SourceOne SQL server"
 			$script:s1ActDb = Read-Host "enter the name of the SourceOne Activity Database"
@@ -525,73 +531,6 @@ catch
 
 }
 }
-
-<#
-.SYNOPSIS
-   Get-ES1Workers
-.DESCRIPTION
-   Retrieve the names of all SourceOne workers from SQL
-.OUTPUT
-Sets Session array $s1Workers
-.EXAMPLE
-   Get-ES1WorkersV2
-   
-   Master.domain.com
-   Worker.domain.com
-#>
-#-------------------------------------------------------------------------------
-# Function:  Get-ES1Workers
-#-------------------------------------------------------------------------------
-function Get-ES1Workers
-{
- [CmdletBinding()]
-param()
-Get-ES1ActivityObj | out-null
-
-#
-# Define SQL Query
-#
-$sqlQuery = @'
-SELECT DISTINCT NetworkName AS servername, workerid 
-FROM MachineInfo mi (NOLOCK)      
-JOIN Workers w (NOLOCK) ON w.MachineID = mi.MachineID
-WHERE w.State <> 32767
-'@
-
-$dtResults = Invoke-ES1SQLQuery $Script:s1actSErver $Script:S1Actdb $sqlQuery
-$Script:s1Workers = $dtResults
-$dtResults
-
-}
-<#
-.SYNOPSIS
-   Get-ES1WorkerNameFromID
-.DESCRIPTION
-   Given a workerID display the name of the worker server
-   Used by S1Jobs etc when retrieving Job information
-.PARAMETER sID
-   Provide the workerid 
-.EXAMPLE
-   Get-ES1WorkerNameFromID 2
-   
-   Worker01
-#>
-function Get-ES1WorkerNameFromID 
-{
-	param ($wId)
-
-	Get-ES1Workers | out-null
-	foreach ($w in $Script:s1Workers)
-	{
-		if ($w.workerid -eq $wID)
-		{
-			$name = $w.servername.Split(".")[0]
-		}
-	}
-
-	$name
-}
-
 
 <#
 .SYNOPSIS
@@ -703,13 +642,17 @@ $dtResultsMod
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Gets a list of all the SourceOne workers and archive servers
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Gets a list of all the SourceOne workers and archive servers using direct SQL queries.  
+   Does not return machine names which are in the "deleted" state (state=32767).
+
 .EXAMPLE
-   <An example of using the script>
+   Get-ES1ServerList
+ 
+ .EXAMPLE
+   $allServers=Get-ES1ServerList
+
 #>
 function Get-ES1ServerList
 {
@@ -1240,7 +1183,7 @@ for ($i = 0; $i -lt $x.count; $i++)
 function Remove-ES1TraceLogs
 {
 [CmdletBinding()]
-param($fileSpec,$days = 0)
+param($fileSpec = "*.log",$days = 0)
 
 if ($fileSpec -ne $null)
 {
@@ -1295,11 +1238,14 @@ $WaitZipTime = 1
 .SYNOPSIS
    Compress-FileListToZip
 .DESCRIPTION
-compress a list of files into the named zip
+	compress a list of files into the named zip
+
 .PARAMETER zipspec
-   list of files to zip 
+	name of the zip file to create/update
+   
 .PARAMETER filespec
-   name of the zip file to create/update
+	list of files to zip 
+
 .EXAMPLE
    dir $s1JobLogDir\*28*.log | Compress-FileListToZip l28.zip 
 #>
@@ -1312,17 +1258,20 @@ function Compress-FileListToZip
 	ValueFromPipeLineByPropertyName=$true)]
     [string[]]$filelist) 
 
-	
+BEGIN {
 
-	if ($zipspec -notmatch ':')
-	{
-		$loc = Get-Location
-		$zipname = $loc.ToString() + "\$zipspec"
-	}
-	else
-	{
-		$zipname = $zipspec
-	}
+	# This logic doesnt work if a UNC is passed in !!
+	#if ($zipspec -notmatch ':')
+	#{
+	#	$loc = Get-Location
+	#	$zipname = $loc.ToString() + "\$zipspec"
+	#}
+	#else
+	#{
+	#	$zipname = $zipspec
+	#}
+	
+	$zipname = $zipspec
 
 	if (-not $zipname.EndsWith('.zip')) {$zipname += '.zip'} 
 
@@ -1335,17 +1284,27 @@ function Compress-FileListToZip
 	}
 
 	$ZipFile = (new-object -com shell.application).NameSpace($zipname) 
+}
+
+	#
+	# Process is called for each item in the pipeline !
+	#
+PROCESS {
 	if ($ZipFile -ne $null)
 	{
-
-
 		foreach ($c in $filelist)
 		{
 			write-output $c
-
+            $shortname=Split-Path -Path $c -Leaf
 			$ZipFile.CopyHere($c)
-			# CopyHere is Asynchronous, need to wait before adding another....
-			Sleep -Seconds $WaitZipTime
+            $size = $ZipFile.Items().Item($shortname).Size
+
+            # CopyHere is Asynchronous, need to wait before adding another....            
+            while($ZipFile.Items().Item($shortname) -Eq $null)
+            {
+                start-sleep -seconds $WaitZipTime
+                write-verbose "." -nonewline
+            }
 
 		}
 
@@ -1354,6 +1313,9 @@ function Compress-FileListToZip
 	{
 		Write-Output "unable to create NameSpace for $zipfile"
 	}
+}
+
+END {}
 
 } 
 
@@ -1587,98 +1549,31 @@ SecondIPM   IPMArchive2.qagsxpdc.com          14 {Index, Query, Retrieval}
 	end {}
 }
 
-
-$global:RoleDisplayNames = @{}
-
-#
-# Hard coded worker role display names in case not on machine with modules to get strings from...
-#  The key is the taskTypeID 
-$displayNames = @{
-	-1846448278 = "File Delete - Historical";
-	-1788567307 = "File Archive - Historical";
-	-1275657296 = "File Index in Place - Historical";
-	-623249162 = "File Shortcut - Historical";
-	-1373822617 = "File Removal";
-	45 = "SharePoint Restore";
-	44 = "File Restore";
-	1818414846 = "File Restore - Historical";
-	42 = "Restore Shortcuts - Microsoft Exchange Public Folders";
-	40 = "Delete - Microsoft Exchange Public Folders";
-	38 = "Shortcut - Microsoft Exchange Public Folders";
-	36 = "Archive - Microsoft Exchange Public Folders";
-	34 = "Delete - User Initiated Delete";
-	32 = "Restore Shortcuts - Historical & User Directed Archive";
-	31 = "Query Discovery Manager";
-	28 = "Find - Microsoft Office Outlook .PST";
-	26 = "Delete - User Directed Archive";
-	24 = "Shortcut - User Directed Archive";
-	22 = "Archive - User Directed Archive";
-	21 = "Delete";
-	19 = "Migrate - Microsoft Office Outlook .PST";
-	18 = "Update Shortcuts - Historical & User Directed Archive";
-	17 = "Export";
-	16 = "Journal";
-	15 = "Archive - Personal Mail Files";
-	1888230777 = "File Shortcut Restore - Historical";
-	8 = "Query";
-	6 = "Export Discovery Manager";
-	5 = "Delete - Historical";
-	4 = "Shortcut - Historical";
-	3 = "Archive - Historical"}
-
-# used for dynamic rebuild of table above.  These strings from rooted from ExJDFEnums.Translate()
-$NoKnownConfigurators = @{
-	45 = "SharePoint Restore";
-	44 = "File Restore";
-	31 = "Query Discovery Manager";
-	21 = "Delete";
-	17 = "Export";
-	8 = "Query";
-	6 = "Export Discovery Manager";
-
-}
-function Set-WorkerRoleDisplayNames {
-	<#
+<#
 .SYNOPSIS
-	Loads a global hash map with the tasktypeid and UI displayable worker role name associated with it.
-	A static copy of the map is used if this is not run on a machine with the S1 console installed.
-	This function is used internally by other functions/commands and is generally not executed from the 
-	command line.
+	Get a list of SourceOne Archive machines and their enabled roles
+	
 .DESCRIPTION
-	Loads a global hash map with the tasktypeid and UI displayable worker role name associated with it.
-	A static copy of the map is used if this is not run on a machine with the S1 console installed.
-	This function is used internally by other functions/commands and is generally not executed from the 
-	command line.
-.PARAMETER outfile
-	Option parameter to specify an output file that will capture the hash map of task type ID and the 
-	display name that was discovered.
+	Get a list of SourceOne Archive machines and their enabled roles
+	
 .EXAMPLE
-	Set-WorkerRoleDisplayNames
+	Get-ES1ArchiverInfo	
 
-.EXAMPLE
-	Set-WorkerRoleDisplayNames -debug
-.EXAMPLE
-	Set-WorkerRoleDisplayNames -out file.csv
+ArchiveName ServerName                RolesValue Enabled Roles
+----------- ----------                ---------- -------------
+Archive1    s1Master7-J1.qagsxpdc.com         15 {Archive, Index, Query, Retrieval}
+IPMArchive  IPMWorker02.qagsxpdc.com          14 {Index, Query, Retrieval}
+SecondIPM   IPMArchive2.qagsxpdc.com          14 {Index, Query, Retrieval}
 
 #>
+function Get-ES1ArchiverInfo
+{
+
 	[CmdletBinding()]
-	param ( [Parameter(Mandatory=$false)]
-		[Alias('out')]
-		[string]$outfile = "" )
-	begin {
+	param( )
 
-		$MyDebug = $false
-		# Do both these checks to take advantage of internal parsing of syntaxes like -Debug:$false
-		if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey("Debug") -and $PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent)
-		{
-			$DebugPreference = "Continue"
-			Write-Debug "Debug Output activated"
-			# for convenience
-			$MyDebug = $true
-		}
-
+	BEGIN {
 		try {
-
 			[bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
 
 			if (-not $loaded )
@@ -1692,361 +1587,61 @@ function Set-WorkerRoleDisplayNames {
 			Write-Error $_ 
 			break
 		}
+
+
 	}
 
-	process {
+  PROCESS {
+		$asmgr = new-object -ComObject ExAsAdminAPI.CoExASAdminAPI
 
-		if ($MyDebug)
+		$asmgr.Initialize()
+
+		$ASRoles = [enum]::GetNames([EMC.Interop.ExASBaseAPI.exASServerPersonalities])
+		Write-Debug "$($ASRoles)"
+
+		$ASRepos = $asmgr.EnumerateRepositories()
+		$AllArchives = @()
+
+		foreach ($repo in $ASRepos)
 		{
-			Write-Debug "Emptying RoleDisplayNames map ..."
-			$global:RoleDisplayNames.Clear()
-		}
-
-		#
-		# Some logic lifted from GetServerAssignments in "ExServerConfigCtrl.cs"
-		#
-		$jdfapiMgr = new-object -comobject ExJDFAPI.CoExJDFAPIMgr.1
-
-		$TaskTypeFilter = $jdfapiMgr.CreateNewObject([EMC.Interop.ExJDFAPI.exJDFObjectType]::exJDFObjectType_TaskTypeFilter)
-
-		$tasktypes = $jdfapiMgr.GetTaskTypes($TaskTypeFilter)
-		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($TaskTypeFilter) > $null
-
-		# gets the Mail systems supported... :-)
-		#$generalSettings=$jdfapiMgr.GetSystemGeneralSettings()
-		#$generalSettings
-
-		# $tasktypes  | ft -AutoSize | Out-String -Width 100000 > foo
-		$installPath = Get-ES1InstallDir
-
-		#
-		#  These modules will only be on machine with the worker services installed.
-		#
-		$pathroot = $installPath +'Console\bin\'
-		$ExUIDLL = $pathroot + "ExUIUtils.dll"
-
-		if (Test-Path -path $pathroot)
-		{
-			# We load this because the "Files" components have a dependency on it and the creation
-			#   of their configruation object will fail if this isn't already loaded
-			$ExUI = [reflection.assembly]::LoadFrom($ExUIDLL)
+			$Servers = @($repo.EnumerateServers())
+			Write-Debug "Archive:  $($repo.Name) has $($Servers.Count) servers"
 
 			#
-			# if on a machine with Console, load all the strings from the installed task types..
-			#
-			foreach ($tasktype in $TaskTypes)
-			{
-				if ((($taskType.state -band [int][EMC.Interop.ExBase.exPluginState]::exPluginState_Active) -and ` #Only Active types
-						(							(								$taskType.state -band [int][EMC.Interop.ExBase.exPluginState]::exPluginState_NotAdminDisplayable) -eq $false)) -or ` # hide internal types
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_Query -eq $taskType.id ) -or `
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_RestoreJBC -eq $taskType.id ) -or `
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_DeleteFromArchiveJBC -eq $taskType.id ) -or `
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_DCQuery -eq $taskType.id ) -or `
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_Restoration -eq $taskType.id ) -or `
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_FileRestoreJBC-eq $taskType.id ) -or `
-					(						[int][EMC.Interop.ExBase.exCoreTaskTypes]::exCoreTaskTypes_SharePointRestoreJBC -eq $taskType.id ) 
-				)
+			# Add some new columns
+			$Servers | Add-Member NoteProperty -Name "ArchiveName" -Value $repo.Name
+			$Servers | Add-Member NoteProperty -Name "ArchiveRoles" -Value ""
 
+			foreach ($server in $Servers)
+			{
+				$roles = @()
+				$personality = $server.ServerPersonality
+
+				for ($i = 0 ; $i -lt ($ASRoles.Length-1); $i++)
 				{
 
-					if ($tasktype.configuratorModuleWin32.Length -gt 0)
+					[int] $bits = [EMC.Interop.ExASBaseAPI.exASServerPersonalities]$ASRoles[$i]
+
+					if ($personality -band $bits)
 					{
-						#Write-Host $tasktype.id $tasktype.name $tasktype.objectID $tasktype.configuratorModuleWin32 $tasktype.configuratorObjectIDWin32
-						$path = $pathroot + $tasktype.configuratorModuleWin32
-
-						try
-						{
-							$Name = ""
-							$Description = ""
-
-							#assembly name comes from the taskType object returned by GetTask
-							$assemblyUI = [reflection.assembly]::LoadFrom($path)
-							Write-Debug "$($tasktype.name), cfg Module: $($tasktype.configuratorModuleWin32) cfg ObjectID: $($tasktype.configuratorObjectIDWin32)"
-
-							$UIMgr = $assemblyUI.CreateInstance($tasktype.configuratorObjectIDWin32)
-
-							$UIMgr.GetTypeDisplayName($tasktype.id,[ref]$Name,[ref]$Description)
-						}
-						catch
-						{
-							Write-Warning "Failed to load configurator and create object $($tasktype.id) $($tasktype.name)"
-							Write-Error $_
-						}
-
-						if ($Name.Length -eq 0)
-						{
-							Write-Host "No display name for: $($tasktype.id) $($tasktype.name) "
-							$global:RoleDisplayNames.Add($tasktype.id,$tasktype.name)
-						}
-						else
-						{
-							#Write-Host "Got display name for: $($tasktype.id) $($tasktype.name) Display Name: $($Name) "
-							#       Write-Host "Got display name for: $($tasktype.id), Display Name: $($Name) "
-							$global:RoleDisplayNames.Add($tasktype.id,$Name)
-						}
-
-						#  Think I need to free the object but cant find the right way.
-						#[System.Runtime.Interopservices.Marshal]::Release($UIMgr)  > $null
-
-
+						$roles += ([EMC.Interop.ExASBaseAPI.exASServerPersonalities]$ASRoles[$i]).ToString().Substring(10)
 					}
-					else
-					{
-						# no configurator so see if there is a known string to use...
 
-						if ($NoKnownConfigurators.ContainsKey($tasktype.id))
-						{
-							$NameStr = $NoKnownConfigurators.Get_Item($tasktype.id)
-							$global:RoleDisplayNames.Add($tasktype.id,$NameStr)
-							Write-Debug "Known string for: $($tasktype.id) $($NameStr)"
-						}
-						else
-						{
-							Write-Debug "No configurator: $($tasktype.id) $($tasktype.name), using type name "
-							$global:RoleDisplayNames.Add($tasktype.id,$tasktype.name)
-						}
-
-					}
 				}
 
-			} #end foreach
+				$server.ArchiveRoles=$roles
 
-			# preserve the display names to CSV
-			# the CSV can be messaged and used to update the static table...
-			if ($outfile.Length -gt 0)
-			{
-				$global:RoleDisplayNames.GetEnumerator() | select Name, Value | Export-Csv -notype -path $outfile
 			}
+			$AllArchives += $Servers
 
-		}
-		else
-		{
-			# Console\bin dir doesn't exist...
-			$global:RoleDisplayNames = $displayNames
+		} 
 
-		}
+		$AllArchives
 
 	}
-
-	end {}
+	END {}
 
 }
-
-function Get-ES1EnabledWorkerRoles {
-	<#
-.SYNOPSIS
-	Given a list of taskcfg objects (IExWorkerTaskConfig) obtained from a worker (IExWorker) object, 
-	return a list of the active types/roles and their UI displayable names
-
-.DESCRIPTION
-	Given a list of taskcfg objects (IExWorkerTaskConfig) obtained from a worker (IExWorker) object, 
-	return a list of the active types/roles and their UI displayable names
-
-.EXAMPLE
-
-The following snippet displays the active role types and display names string on each worker
-
-		$jdfapiMgr=new-object -comobject ExJDFAPI.CoExJDFAPIMgr.1
-
-		$Workers=@($jdfapiMgr.GetWorkers())
-		foreach ($worker in $Workers)
-		{
-			$allcfgs = @($worker.taskCfgs)
-			$Activecfgs = @(Get-ES1EnabledWorkerRoles $allcfgs)
-			$Activecfgs
-		}
-#>
-	[CmdletBinding()]
-	param ([Parameter(Mandatory=$true)]
-		[Alias('cfgs')]
-		$list = @())
-
-	#
-	# logic lifted from GetServerAssignments in "ExServerConfigCtrl.cs"
-	#
-
-	$retList = @()
-
-	Write-Verbose "SeverRoles for display:  $($global:RoleDisplayNames.Count)"
-
-	foreach ($cfg in $list)
-	{
-
-		if ($cfg.state -eq [int][EMC.Interop.ExJDFAPI.exJDFWorkerTaskCfgState]::exJDFWorkerTaskCfgState_Enabled)
-		{
-			# $global:RoleDisplayNames contains only UI displayable taskids, if its not there is doesn't get
-			# returned
-			if ($global:RoleDisplayNames.ContainsKey($cfg.taskTypeId))
-			{
-				$cfg.taskTypeName=$global:RoleDisplayNames.Get_Item($cfg.taskTypeId)
-				$retList += $cfg
-
-			}
-
-		}
-
-	}
-
-	$retList
-
-}
-
-function Show-ES1WorkerRoles {
-	<#
-.SYNOPSIS
-	Display information about each worker server and it's enabled roles
-.DESCRIPTION
-	Display information about each worker server and it's enabled roles
-.EXAMPLE
-	Show-ES1WorkerRoles
-
-******  Worker : S1MASTER7-J1.QAGSXPDC.COM ******
-
-Group State   Action StartTime            LastActive            JobQuota JobPollTime DaysAvailable
------ -----   ------ ---------            ----------            -------- ----------- -------------
-      Working None   7/17/2014 7:27:06 PM 11/11/2015 9:57:56 PM        0          10            -1
-
-
-Enabled Roles                                          JobLimit
--------------                                          --------
-Archive - Historical                                          4
-Archive - Personal Mail Files                                 2
-Delete                                                        4
-Delete - Historical                                           4
-Delete - Microsoft Exchange Public Folders                    4
-Delete - User Directed Archive                                4
-Delete - User Initiated Delete                                4
-
-.EXAMPLE
-	Show-ES1WorkerRoles > WorkerRoles.txt
-
-	Captures the worker role information to a text file named WorkerRoles.txt
-#>
-	[CmdletBinding()]
-	param ()
-	begin {
-		try {
-			[bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
-
-			if (-not $loaded )
-			{
-				Write-Error 'Error loading SourceOne Objects and Types'
-				break
-			}
-
-			# Load up the display names....
-			if ($global:RoleDisplayNames.Count -le 0)
-			{
-				Set-WorkerRoleDisplayNames
-			}
-		}
-		catch
-		{
-			Write-Error $_ 
-			break
-		}
-	}
-
-	process{
-
-		$Workers = @()
-
-		$jdfapiMgr = new-object -comobject ExJDFAPI.CoExJDFAPIMgr.1
-
-		$workergroups = @($jdfapiMgr.GetWorkerGroups())
-		$Workers = @($jdfapiMgr.GetWorkers())
-
-		# Add some new columns
-		$Workers | Add-Member NoteProperty -Name "WorkerGroup" -Value ""
-
-		$Rolefmt = @{ Expression = { $_.taskTypeName }; label = "Enabled Roles" },
-		@{ Expression = { $_.quota }; label = "JobLimit" } 
-
-		#@{ Expression = { $_.name }; label = "Worker" },
-		$Workerfmt = @{ Expression = { $_.WorkerGroup }; label = "Group"},
-		@{ Expression = { ([EMC.Interop.ExJDFAPI.exJDFWorkerState]$_.state).ToString().Substring(17) }; label = "State"; width=12 },
-		@{ Expression = { ([EMC.Interop.ExJDFAPI.exJDFWorkerAction]$_.action).ToString().Substring(18) }; label = "Action" },
-		@{ Expression = { $_.startTime }; label = "StartTime" },
-		@{ Expression = { $_.lastActive }; label = "LastActive" },
-		@{ Expression = { $_.jobQuota }; label = "JobQuota" },
-		@{ Expression = { $_.jobPollTime }; label = "JobPollTime" },
-		@{ Expression = { $_.daysAvailable }; label = "DaysAvailable" }
-
-		# Add the Worker Group if there is one... 
-		foreach ($worker in $Workers)
-		{
-			if ($workergroups.Length -gt 0)
-			{
-				foreach ($group in $workergroups)
-				{
-					if ($group.id -eq $worker.workerGroupID)
-					{
-						$worker.WorkerGroup = $group.name
-						break;
-					}
-				}
-			}
-
-			# Display the Worker information
-			Write-Output "******  Worker : $($worker.name) ******"
-			$worker | ft -AutoSize $Workerfmt | Out-String -Width 1000
-
-			$cfgs = @()
-			$tasks = @()
-
-			$cfgs = @($worker.taskCfgs)
-			$allCfgs = @($worker.taskCfgs)
-
-			$cfgs = @(Get-ES1EnabledWorkerRoles $cfgs)
-			$cfgIndex = 0
-			#
-			# Adjust the joblimit/quota to display like the GUI does.
-			#   some logic lifter from "PopulateGrid" in ExWorkerTaskCfgPage.cs
-			foreach ($cfg in $cfgs)
-			{
-				# First thing to do is determine whether this is a job-level task (JBC).  If
-				#    it's not, we'll use it to get to associated jobs that are...
-
-				$childFilter = $jdfapiMgr.CreateNewObject([EMC.Interop.ExJDFAPI.exJDFObjectType]::exJDFObjectType_TaskTypeFilter)
-				$childFilter.parentTaskTypeID = $cfg.id
-				$childTaskTypes = @($jdfapiMgr.GetTaskTypes($childFilter))
-				[System.Runtime.Interopservices.Marshal]::ReleaseComObject($childFilter) > $null
-
-				$useThis = $cfg
-
-				#  Use the first child type if we got one...
-				if ($childTaskTypes.Length -gt 0)
-				{
-					$useThis = $childTaskTypes[0]
-				} 
-
-				# Look for the current type in the workers full collection
-				foreach ($parent in $allCfgs)
-				{
-					#
-					# Note, there is some hairy logic in Populate grid, but I think this
-					#   gets the job done...
-					#
-					if ($parent.taskTypeID -eq $useThis.id)
-					{
-						$cfgs[$cfgIndex].quota = $parent.quota
-						Write-Debug "Config ID $($cfg.id) Quota: $($cfg.quota) New: $($parent.quota)"
-					}
-				}
-				$cfgIndex++
-
-			}
-
-			# And display the Roles....
-			$cfgs | sort taskTypeName | ft -AutoSize $Rolefmt
-		}
-	}
-
-	end {}
-
-
-}
-
 
 
 Export-ModuleMember -Variable s1InstallDir
@@ -2080,8 +1675,7 @@ New-Alias Show-S1Servers Get-ES1ServerList
 New-Alias Show-ES1Servers Get-ES1ServerList 
 New-Alias Get-S1Servers Get-ES1Servers 
 New-Alias Get-S1ServerSoftwareInfo Get-ES1ServerSoftwareInfo 
-New-Alias Get-S1WorkerNameFromID Get-ES1WorkerNameFromID
-New-Alias Get-S1Workers Get-ES1Workers
+
 New-Alias Show-S1ServerInfo Show-ES1ServerInfo
 New-Alias Get-S1ActivityObj Get-ES1ActivityObj
 

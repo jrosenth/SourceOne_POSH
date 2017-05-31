@@ -53,10 +53,11 @@ PROCESS
 	   return $success
 	}
 
+	# I changed the manifest to requrei Powershell 4 or greater now, so this may never show 
 	if ($POSHVersion.Version -eq '2.0')
 	{
-		Write-Error 'Requires PowerShell 3.0 or greater !'
-        Throw 'Requires PowerShell 3.0 or greater !'
+		Write-Error 'Requires PowerShell 4.0 or greater !'
+        Throw 'Requires PowerShell 4.0 or greater !'
 	   return $success
 	}
 

@@ -70,6 +70,7 @@
 xcopy "$(ProjectDir)..\SourceOne_POSH\%2a.psm1"  "$(ProjectDir)..\InstallModuleFiles" /Y /R /I
 xcopy "$(ProjectDir)..\SourceOne_POSH\SourceOne_POSH.psd1"  "$(ProjectDir)..\InstallModuleFiles" /Y /R /I
 xcopy "$(ProjectDir)..\SourceOne_POSH\folderdefaults.xml"  "$(ProjectDir)..\InstallModuleFiles" /Y /R /I
+xcopy "$(ProjectDir)..\SourceOne_POSH\ES1_DefaultCSS.txt"  "$(ProjectDir)..\InstallModuleFiles" /Y /R /I
 
 "$(WIX)bin\heat.exe" dir "$(ProjectDir)..\InstallModuleFiles" -cg ModuleComponents -ag -scom -sreg -sfrag -srd -dr SubModulesFolder -var var.ES1POSHFILES  -out "$(ProjectDir)Fragments\FilesFragment.wxs" -v</PreBuildEvent>
   </PropertyGroup>

@@ -22,7 +22,8 @@
 
 
 
-#//the JDF DB developer. JDF DB uses the actual values
+# JDF DB uses/return theses actual values
+#  C# code uses the [EMC.Interop.ExJDFAPI.exJDFJobState] enum
 $eJobUnknown = 0x00000000 # - Unknown State(DB default)
 $eJobAvailable = 0x00000001 # - The job is free for the taking
 $eJobTaken = 0x00000002 # - A worker has chosen the job and is 
@@ -77,14 +78,12 @@ param(
 	[int]$days = -1,[switch] $usedate = $false,
 	[switch]$failed,[switch]$failedItems)
 
-Get-ES1JobInfo $newest $tasktypeid $jobtype $days -usedate:$usedate -failed:$failed -faileditems:$faileditems | select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime | Format-Table -AutoSize
+	Get-ES1JobInfo $newest $tasktypeid $jobtype $days -usedate:$usedate -failed:$failed -faileditems:$faileditems | `
+	       select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime | Format-Table -AutoSize | Out-String -Width 10000
 
 }
 
 
-
-function Get-ES1JobInfo
-{
 <#
 .SYNOPSIS
  Derived from Mike Tramont JobInfo script(s)
@@ -96,18 +95,20 @@ Produce a table of job history an status for the requested number of days.
 Derived from Mike Tramont JobInfo script(s)
 
 .PARAMETERS days
-The number of days of information to capture, default is 1 day of information
+	The number of days of information to capture, default is 1 day of information
 .PARAMETERS newest
-the number of most recent job information to retreive
+	The number of most recent job information to retreive
 .PARAMETERS Failed
-show only items with a failed State
+	show only items with a failed State
 .PARAMETERS FailedItems
-show only items with a FailedItemCount > 0
+	show only items with a FailedItemCount > 0
 .OUTPUTS
 
 .EXAMPLE
 
 #>
+function Get-ES1JobInfo
+{
 [CmdletBinding()]
 param(
 	$newest, $taskTypeid = 0,
@@ -211,9 +212,6 @@ ORDER by j.JobID desc
 
 		$sqlquery = $sqlQuery.Replace('NEWEST',$newest)
 
-
-
-
 		if ($failed -and $failedItems)
 		{
 			$sqlquery = $sqlQuery.Replace('WHERE',"where (j.state = $eJobFailed ) OR (FailedItemCount > 0)" )
@@ -251,38 +249,40 @@ ORDER by j.JobID desc
 
 	$dtOutput = @(Invoke-ES1SQLQuery $actDbServer $actDb $sqlQuery )
 
-	Write-Output ""
 	Write-Verbose "Data Rows Returned:  $($dtOutput.Rows.Count)"
-
 
 	#
 	# Output results
 	#
 	#$dtOutput | Export-CSV -NoTypeInformation -Delimiter "`t" -Path "$outdir\Data\DATA-JobInfo.tsv" -Force
 	#$dtOutput | format-table -AutoSize
+
 	$jobsArray = @()
 	foreach ($row in $dtOutput)
 	{
 		$wName = Get-ES1WorkerNameFromID $row.workerid
 
 		$jState = Convert-S1JobStateToString $row.state_orig
-		$jobprops = @{jobid=$row.jobid;
+		$jobprops = [ordered] @{jobid=$row.jobid;
+			WorkerName = $wName;
 			PolicyName = $row.Policy_Name;
 			ActivityName = $row.Activity_Name;
-			AgeHours = $row.age_hours;
+			TaskType = $row.Task_Type;
+			StateStr = [string]$jstate;
 			ItemsProcessed = $row.ProcessedItemCount;
 			ItemsFailed = $row.faileditemcount;
 			ItemsDupd = $row.duplicateitemcount;
-			WorkerName = $wName;
-			TaskTypeID =$row.tasktypeid;
-			TaskType = $row.Task_Type;
-			JobType =$jobtype;
 			StartTime = $row.StartTime.ToLocalTime();
 			EndTime = $row.endtime.ToLocalTime();
-			State = $row.state;
-			StateStr = [string]$jstate }
+			TaskTypeID =$row.tasktypeid;			
+			JobType =$jobtype;
+			State = $row.state_orig;
+			AgeHours = $row.age_hours;
+			 }
 		$jobObject = New-Object -Type psobject -Property $jobprops
 		$JobsArray += $jobObject
+
+		#Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime 
 	}
 
 	$JobsArray 
@@ -293,13 +293,13 @@ end {}
 }
 
 
-
 function Convert-S1JobStateToString
 {
  param ([int]$state)
 $decoded = ''
 
 # [EMC.Interop.ExJDFAPI.exJDFJobState]
+
 switch ($state)
 {
 	$eJobUnknown { $decoded = "JobUnknown"} 
@@ -328,12 +328,12 @@ $decoded
 .SYNOPSIS
 	Produce a table of job history for Jobs which have failed
 .DESCRIPTION
-	Get-ES1FailedJobs
+	Show-ES1FailedJobs
 .PARAMETERS newest
 The number of items to display
 
 .EXAMPLE
-Get-ES1FailedJobs 
+Show-ES1FailedJobs 
 
 jobid StartTime             ItemsFailed ItemsDupd State WorkerID StateStr   JobType ItemsProcessed EndTime              
 ----- ---------             ----------- --------- ----- -------- --------   ------- -------------- -------              
@@ -347,42 +347,46 @@ function Show-ES1FailedJobs
 [CmdletBinding()]
  param($newest = 10)
 
-Get-ES1JobInfo -failed -newest $newest | select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime | Format-Table -AutoSize
+Get-ES1JobInfo -failed -newest $newest | `
+	select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime |`
+	Format-Table -AutoSize | Out-String -Width 10000
 }
 
+<#
+.SYNOPSIS
+	Produce a table of job history for Jobs which have failed items
+.DESCRIPTION
+	Show-ES1JobsWithFailedItems
+.PARAMETERS newest
+	The number of items to display
+
+.EXAMPLE
+
+ #>
 function Show-ES1JobsWithFailedItems
 {
 [CmdletBinding()]
  param($newest = 10)
 
-Get-ES1JobInfo -failedItems -newest $newest | select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime | Format-Table -AutoSize
+Get-ES1JobInfo -failedItems -newest $newest | `
+	select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime | `
+	Format-Table -AutoSize | Out-String -Width 10000
 }
 
 <#
 .SYNOPSIS
- Show-ES1JobLogs
+ Find-InS1JobLogs 
 .DESCRIPTION
-Retrieve the location and specified information from the SourceOne Job Logs
+	Retrieve the location and specified information from the SourceOne Job Logs
 .PARAMETER JobId
-Optional Specific JobId (decimal) or "*" for all jobs  default to *
+	Optional Specific JobId (decimal) or "*" for all jobs  default to *
 .PARAMETER SearchStr
-Optional String to search for
+	Optional String to search for
 .PARAMETER Startdate
-Check only logs newer than the specified Startdate
+	Check only logs newer than the specified Startdate
+      
 .EXAMPLE
-Show-ES1JobLogs
-  Directory: \\master\joblogs
-
-
-Mode                LastWriteTime     Length Name                                                                                                                        
-----                -------------     ------ ----                                                                                                                        
--a---         5/10/2012   3:16 PM      13200 00000028DETMSG.LOG                                                                                                          
--a---         6/12/2015   2:09 PM        802 00000119DETMSG.LOG                                                                                                          
--a---         6/12/2015   2:09 PM      13230 0000011ADETMSG.LOG                                                                                                          
--a---         9/11/2015  11:46 AM      64112 0000012CDETMSG.LOG                                                                                                          
--a---         8/24/2012   9:42 AM     104740 00000905DETMSG.LOG           
-.EXAMPLE
-Show-ES1JobLogs -searchStr "Total Failed"
+	Find-InS1JobLogs  -searchStr "Total Failed"
 
 00000028DETMSG.LOG.fullname
     Job(40) -> Total Failed messages: 0 
@@ -395,81 +399,10 @@ Look for logs created since 11-15-2015
 
 Find-InS1JobLogs -searchStr "Failed" -startdate 11-15-2015
 .EXAMPLE 
-Show-ES1JobLogs -JobId 300
 
-
-    Directory: \\master\joblogs
-
-
-Mode                LastWriteTime     Length Name                                                                                                                        
-----                -------------     ------ ----                                                                                                                        
--a---         9/11/2015  11:46 AM      64112 0000012CDETMSG.LOG   
-.EXAMPLE
- Show-ES1JobLogs -JobId 300 -searchStr "Total Messages"
-0000012CDETMSG.LOG.fullname
-    Job(300) -> Total messages processed: 206 Size: 3.05 MB
-    Job(300) -> Total messages skipped: 0 
-Total mail containers: 1 Total messages processed: 206 Size: 3.05 MB                     
 #>
 
 
-<#
-.SYNOPSIS
- Show-ES1JobLogs
-.DESCRIPTION
-Retrieve the location and specified information from the SourceOne Job Logs
-.PARAMETER JobId
-Optional Specific JobId (decimal) or "*" for all jobs  default to *
-.PARAMETER SearchStr
-Optional String to search for
-.PARAMETER Startdate
-Check only logs on the specified Startdate
-.PARAMETER Days
-when using the StartDate paramater this will be the total number of days of logs to query, default = 1
-.PARAMETER Summary
-the number of lines to display for the log summary (last number of lines in the log) default = 7
-.EXAMPLE
-Show-ES1JobLogs
-  Directory: \\master\joblogs
-
-
-Mode                LastWriteTime     Length Name                                                                                                                        
-----                -------------     ------ ----                                                                                                                        
--a---         5/10/2012   3:16 PM      13200 00000028DETMSG.LOG                                                                                                          
--a---         6/12/2015   2:09 PM        802 00000119DETMSG.LOG                                                                                                          
--a---         6/12/2015   2:09 PM      13230 0000011ADETMSG.LOG                                                                                                          
--a---         9/11/2015  11:46 AM      64112 0000012CDETMSG.LOG                                                                                                          
--a---         8/24/2012   9:42 AM     104740 00000905DETMSG.LOG           
-.EXAMPLE
-Get-ES1S1JobLogs  -searchStr "Total Failed"
-
-00000028DETMSG.LOG.fullname
-    Job(40) -> Total Failed messages: 0 
-00000119DETMSG.LOG.fullname
-0000011ADETMSG.LOG.fullname
-0000012CDETMSG.LOG.fullname
-    Job(300) -> Total Failed messages: 0 
-.EXAMPLE 
-Look for logs created since 11-15-2015
-
-Show-ES1JobLogs -searchStr "Failed" -startdate 11-15-2015
-.EXAMPLE 
-Find-InS1JobLogs -JobId 300
-
-
-    Directory: \\master\joblogs
-
-
-Mode                LastWriteTime     Length Name                                                                                                                        
-----                -------------     ------ ----                                                                                                                        
--a---         9/11/2015  11:46 AM      64112 0000012CDETMSG.LOG   
-.EXAMPLE
- Show-ES1JobLogs  -JobId 300 -searchStr "Total Messages"
-0000012CDETMSG.LOG.fullname
-    Job(300) -> Total messages processed: 206 Size: 3.05 MB
-    Job(300) -> Total messages skipped: 0 
-Total mail containers: 1 Total messages processed: 206 Size: 3.05 MB                     
-#>
 function Find-inES1JobLogs
 {
 	[CmdletBinding()]
@@ -500,7 +433,6 @@ function Find-inES1JobLogs
 	}
 
 	write-verbose "$startdate to $enddate"
-
 
 	Get-ES1JobLogDir | out-null
 
@@ -549,18 +481,17 @@ function Find-inES1JobLogs
 
 	}
 
-
-
 }
 
-function Show-ES1JobLogs
-{
 <#
 .SYNOPSIS
 	TBD	
 .DESCRIPTION
 	TBD - 
  #>
+
+function Show-ES1JobLogs
+{
 [CmdletBinding()]
 	param ()
     Get-ES1JobLogDir | out-null

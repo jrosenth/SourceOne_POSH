@@ -377,12 +377,13 @@ function Show-ES1ArchiveFolders
 {
 <#
 .SYNOPSIS
-	
+	Displays all the properties of an Archive folder.
 .DESCRIPTION
-
+	Displays all the properties of an Archive folder.
 .OUTPUTS
 
 .EXAMPLE
+	Show-ES1ArchiveFolders
 
 #>
 [CmdletBinding()]
@@ -429,14 +430,16 @@ PROCESS {
 
         foreach ($repo in $repos)
         {
-            $repo.Name
-
+            Write-Host "Archive Name: $($repo.Name)"
+			Write-Host ""
             $folderplan=$repo.GetFolderPlan()
             $folders = $folderplan.EnumerateArchiveFolders()
 
             foreach ($folder in $folders)
             {
-                $folder.FullPath
+                Write-Host "Archive Folder: $($folder.FullPath)"
+				Write-Host "Folder Properties"
+
                 $folder | Format-List -Property *
     
             }
@@ -457,9 +460,381 @@ PROCESS {
 END{}
 }
 
+function Get-ES1ArchiveFolder
+{
+<#
+.SYNOPSIS
+	Gets an instance of an existing Archive folder
+.DESCRIPTION
+	Gets an instance of an existing Archive folder
+
+.EXAMPLE
+	Get-ES1ArchiveFolder -ArchiveName Archive1 -FolderName 5Year
+#>
+[CmdletBinding()]
+PARAM( [Parameter(Mandatory=$true)]
+		[Alias('archive')]
+		[string] $ArchiveName,		
+		[Parameter(Mandatory=$false)]
+		[Alias('name')]
+		[string] $FolderName
+		)
 
 
+BEGIN{
+		$MyDebug = $false
+		# Do both these checks to take advantage of internal parsing of syntaxes like -Debug:$false
+		if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey("Debug") -and $PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent)
+		{
+			$DebugPreference = "Continue"
+			Write-Debug "Debug Output activated"
+			# for convenience
+			$MyDebug = $true
+		}
+
+	try {
+		 [bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
+
+        if (-not $loaded )
+        {
+            Write-Error 'Error loading SourceOne Objects and Types'
+            break
+        }
+	}
+	catch
+	{
+		Write-Error $_ 
+		break
+	}
+}
+
+PROCESS {
+	try {
+
+		Write-Verbose "Archive Name: $($ArchiveName), Archive Folder: $($FolderName)"
+
+	    $asmgr = new-object -ComObject ExAsAdminAPI.CoExASAdminAPI
+		$asmgr.SetTraceInfo('SourceOne_POSH')
+        $asmgr.Initialize()
+
+		$repo=$asmgr.GetRepository($ArchiveName)
+	    $repo.SetTraceInfo('SourceOne_POSH')
+    
+        $folderplan=$repo.GetFolderPlan()
+        $folders = $folderplan.EnumerateArchiveFolders()
+
+            foreach ($folder in $folders)
+            {
+			 if (($folder.Name -eq $FolderName) )
+				{
+					$retFolder = $folder
+					break;
+				}
+            }
+    
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($folderplan) > $null
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($repo) > $null
+
+	}
+ catch {
+		Write-Error $_ 
+		}
+
+		$retFolder
+}
+END {}
+
+}
+
+function Get-ES1AllArchiveFolders
+{
+<#
+.SYNOPSIS
+	Gets a list all archive folders and their properties
+.DESCRIPTION
+	Gets a list all archive folders and their properties
+.OUTPUTS
+
+.EXAMPLE
+	$folders=Get-ES1AllArchiveFolders
+
+#>
+[CmdletBinding()]
+PARAM( 	)
 
 
+BEGIN{
+		$MyDebug = $false
+		# Do both these checks to take advantage of internal parsing of syntaxes like -Debug:$false
+		if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey("Debug") -and $PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent)
+		{
+			$DebugPreference = "Continue"
+			Write-Debug "Debug Output activated"
+			# for convenience
+			$MyDebug = $true
+		}
+
+	try {
+		 [bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
+
+        if (-not $loaded )
+        {
+            Write-Error 'Error loading SourceOne Objects and Types'
+            break
+        }
+	}
+	catch
+	{
+		Write-Error $_ 
+		break
+	}
+}
+
+PROCESS {
+
+    $allfolders=@()
+
+    try
+    {
+ 
+        $asmgr = new-object -ComObject ExAsAdminAPI.CoExASAdminAPI
+
+        $asmgr.Initialize()
+
+        $repos=$asmgr.EnumerateRepositories()
+
+        foreach ($repo in $repos)
+        {
+        
+            $folderplan=$repo.GetFolderPlan()
+            $folders = $folderplan.EnumerateArchiveFolders()
+
+            $allfolders += $folders
+    
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($folderplan) > $null
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($repo) > $null
+
+        }
+    }
+    catch 
+    {
+        throw $_
+    }
+    finally
+    {
+    }
+
+    $allfolders
+}
+END{}
+}
+<#
+.SYNOPSIS
+	Get a Archive folder summary information, similar to what is displayed in the MMC console
+.DESCRIPTION
+  Get a Archive folder summary information, similar to what is displayed in the MMC console
+.OUTPUT
+
+.EXAMPLE
+
+#>
+Function Get-ArchiveFolderSummaryInfo
+{
+	[CmdletBinding()]
+	PARAM ()
+BEGIN{
+		$MyDebug = $false
+		# Do both these checks to take advantage of internal parsing of syntaxes like -Debug:$false
+		if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey("Debug") -and $PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent)
+		{
+			$DebugPreference = "Continue"
+			Write-Debug "Debug Output activated"
+			# for convenience
+			$MyDebug = $true
+		}
+
+	try {
+		 [bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
+
+        if (-not $loaded )
+        {
+            Write-Error 'Error loading SourceOne Objects and Types'
+            break
+        }
+	}
+	catch
+	{
+		Write-Error $_ 
+		break
+	}
+}
+
+PROCESS {
+
+    $allfolders=@()
+
+    try
+    {
+        $asmgr = new-object -ComObject ExAsAdminAPI.CoExASAdminAPI
+        $asmgr.Initialize()
+    
+		$repos=$asmgr.EnumerateRepositories()
+
+        foreach ($repo in $repos)
+        {
+        
+            $folderplan=$repo.GetFolderPlan()
+            $folders = $folderplan.EnumerateArchiveFolders()
+			
+			# change the properies to be like the MMC display
+			$folderSummary = $folders | Select Name, @{name="Volumes"; Expression = {$_.TotalVolumes}},`
+                                        @{name="Volume Items"; Expression = {$_.TotalMsgInVolumes}},`
+                                        @{name="Volume Size(MB)"; Expression = {$_.TotalSizeInVolumes}}, `
+                                        @{name="Indexes"; Expression = {$_.TotalIndexes}},`
+                                        @{name="Index Items"; Expression = {$_.TotalMsgInIndexes}},`
+                                        @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`                                       
+                                        @{name="Errors"; Expression = {$_.FPErrorCount}}
+
+            # put the archive name on each item, so consumers have context											
+			$folderSummary | Add-Member NoteProperty -Name "Archive" -Value $repo.Name
+            $allfolders += $folderSummary
+    
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($folderplan) > $null
+            [System.Runtime.Interopservices.Marshal]::ReleaseComObject($repo) > $null
+
+        }
+    }
+    catch 
+    {
+        throw $_
+    }
+    finally
+    {
+    }
+
+    $allfolders
+}
+END{}
+}
+
+<#
+.SYNOPSIS
+	Get the monthly totals of an Archive folder, similar to what is displayed in the MMC console when the
+	folder is expanded.
+
+.DESCRIPTION
+	Get the monthly totals of an Archive folder, similar to what is displayed in the MMC console when the
+	folder is expanded.
+  
+.OUTPUT
+
+.EXAMPLE
+
+#>
+Function Get-ArchiveFolderMonthlyInfo
+{
+	[CmdletBinding()]
+	PARAM (
+	 [Parameter(Mandatory=$false)]
+		[Alias('archive')]
+		[string] $ArchiveName,		
+		[Parameter(Mandatory=$false)]
+		[Alias('name')]
+		[string] $FolderName)
+BEGIN {
+		$MyDebug = $false
+		# Do both these checks to take advantage of internal parsing of syntaxes like -Debug:$false
+		if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey("Debug") -and $PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent)
+		{
+			$DebugPreference = "Continue"
+			Write-Debug "Debug Output activated"
+			# for convenience
+			$MyDebug = $true
+		}
+
+	try {
+		 [bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
+
+        if (-not $loaded )
+        {
+            Write-Error 'Error loading SourceOne Objects and Types'
+            break
+        }
+	}
+	catch
+	{
+		Write-Error $_ 
+		break
+	}
+
+}
+
+PROCESS {
+	$asmgr = new-object -ComObject ExAsAdminAPI.CoExASAdminAPI
+
+	$asmgr.Initialize()
+
+	#  If an archive was specified get only that one
+	if ($ArchiveName)
+	{
+		$repos=@($asmgr.GetRepository($ArchiveName))
+	}
+	else
+	{
+		# Get a list of ALL the repositories/archives
+		$repos=$asmgr.EnumerateRepositories()
+	}
+	    
+	
+	# Loop through the repositories/archives, getting the folders and months 
+	$MonthsSummary=@()
+
+	foreach ($repo in $repos)
+	{
+   
+		$repo.SetTraceInfo('SourceOne_POSH')
+
+		$folderplan=$repo.GetFolderPlan()
+		$folders = $folderplan.EnumerateArchiveFolders()
+
+		foreach ($folder in $folders)
+		{
+			# If foldername is specified get only the info for that folder
+			if ($FolderName  -and ($folder.Name -ne $FolderName) )
+			{
+				continue;
+				
+			}
+
+			$containerfolders=@()
+			$containerfolders=$folder.EnumerateContainerFolders()
+
+			# change the properies to be like the MMC display
+			$MonthsSummary += $containerfolders | Select @{name="Archive"; Expression = {$repo.Name}}, `
+								@{name="Folder"; Expression = {$folder.Name}}, `
+                                Name, `
+                                @{name="Volumes"; Expression = {$_.TotalVolumes}},`
+                                @{name="Volume Items"; Expression = {$_.TotalMsgInVolumes}},`
+                                @{name="Volume Size(MB)"; Expression = {$_.TotalSizeInVolumes}}, `
+                                @{name="Indexes"; Expression = {$_.TotalIndexes}},`
+                                @{name="Index Items"; Expression = {$_.TotalMsgInIndexes}},`
+                                @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`                                       
+                                @{name="Errors"; Expression = {$_.FPErrorCount}}
+  
+		}
+		
+	   [System.Runtime.Interopservices.Marshal]::ReleaseComObject($folderplan) > $null
+	   [System.Runtime.Interopservices.Marshal]::ReleaseComObject($repo) > $null
+	  }
+  
+	  
+	  $MonthsSummary  
+}
+END {}
+}
+
+
+New-Alias GetS1ArchiveFolder Get-ES1ArchiveFolder
+New-Alias Get-ArchiveFolderSummary Get-ArchiveFolderSummaryInfo
 
 Export-ModuleMember -Function * -Alias *
