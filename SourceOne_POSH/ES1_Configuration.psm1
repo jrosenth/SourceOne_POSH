@@ -826,13 +826,16 @@ $Script:s1SWObjects
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+  Returns an array of all the SourceOne services, software and version number installed on all
+   discoverable machines in a SourceOne implementation
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Returns an array of all the SourceOne services, software and version number installed on all
+   discoverable machines in a SourceOne implementation
+
 .EXAMPLE
-   <An example of using the script>
+   $s1serversinfo = Get-ES1AllServerInfoObjects
+
 #>
 function Get-ES1AllServerInfoObjects
 {
@@ -883,13 +886,37 @@ $Script:s1ServerInfoObjects
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Shows all the SourceOne services, software and version number installed on all
+   discoverable machines in a SourceOne implementation
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Shows all the SourceOne services, software and version number installed on all
+   discoverable machines in a SourceOne implementation
+
 .EXAMPLE
-   <An example of using the script>
+ Show-ES1ServerInfo
+
+Information for SourceOne server IPMARCHIVE2
+Services on SourceOne server     IPMARCHIVE2
+
+Status  Name                        DisplayName
+------  ----                        -----------
+Running ES1AddressResolutionService EMC SourceOne Address Resolution
+Running ES1InPlaceMigService        EMC SourceOne Inplace Migration
+Running ExAsAdmin                   EMC SourceOne Administrator
+Stopped ExAsArchive                 EMC SourceOne Archive
+Stopped ExAsIndex                   EMC SourceOne Indexer
+Running ExAsQuery                   EMC SourceOne Query
+Running ExJobDispatcher             EMC SourceOne Job Dispatcher
+
+Software Installed on SourceOne server IPMARCHIVE2
+
+DisplayName                               Version   AgentName
+-----------                               -------   ---------
+EMC SourceOne Native Archive Services     7.13.3054 Archive
+EMC SourceOne In Place Migration Services 7.30.0084
+EMC SourceOne Worker Services             7.13.3054 Worker
+
+
 #>
 function Show-ES1ServerInfo
 {
@@ -1303,7 +1330,7 @@ PROCESS {
             while($ZipFile.Items().Item($shortname) -Eq $null)
             {
                 start-sleep -seconds $WaitZipTime
-                write-verbose "." -nonewline
+                write-verbose "." #-nonewline
             }
 
 		}

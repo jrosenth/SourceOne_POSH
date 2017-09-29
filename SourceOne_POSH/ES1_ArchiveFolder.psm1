@@ -521,6 +521,7 @@ PROCESS {
 	    $repo.SetTraceInfo('SourceOne_POSH')
     
         $folderplan=$repo.GetFolderPlan()
+		
         $folders = $folderplan.EnumerateArchiveFolders()
 
             foreach ($folder in $folders)
