@@ -50,6 +50,7 @@
     <Content Include="Images\cancelbtn.bmp" />
     <Content Include="Images\Combined3.bmp" />
     <Content Include="Images\Combined3_New.bmp" />
+    <Content Include="Images\DellEMC_2017.bmp" />
     <Content Include="Images\EMC.ico" />
     <Content Include="Images\EMC_Bitmap_93x302.bmp" />
     <Content Include="Images\FullPanel.bmp" />
@@ -58,6 +59,7 @@
     <Content Include="Images\installbtn.bmp" />
     <Content Include="Images\proceedbtn.bmp" />
     <Content Include="Images\progressbar.bmp" />
+    <Content Include="Images\SDSAmericas_2017.bmp" />
     <Content Include="ModuleVersion.wxi" />
   </ItemGroup>
   <ItemGroup>

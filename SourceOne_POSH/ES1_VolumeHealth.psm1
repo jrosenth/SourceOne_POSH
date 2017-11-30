@@ -68,6 +68,8 @@ Try
             #
             # Define SQL Query
             #
+			# TODO - Add support for Atmos OIDs, the XML is different
+			#
             $sqlQuery = @'
 SELECT VolStubXml.value('(/Cf/Gp/CCLIPID)[1]','nvarchar(max)') AS CCLIPID, VolumeName, VolumeFlags, MsgCount, CurrentUNCPath
 FROM Volume (NOLOCK)
@@ -367,6 +369,9 @@ WHERE (VolumeFlags & 4) = 4 And CurrentUNCPath NOT LIKE '%.emx'
             #
             # Define SQL Query
             #
+			# TODO - Doesn't take into account "RecordPending" or "ActiveRecording"
+			#        might be OK, might cause a little confusion
+			#
             $sqlQuery = @'
 SELECT VolumeName, CurrentUNCPath, VolumeId, VolumeSize, MsgCount
 FROM Volume (Nolock)

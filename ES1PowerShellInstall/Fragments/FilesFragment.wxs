@@ -29,18 +29,6 @@
             <Component Id="cmp9A4FA6D846804B486C31FB685D4C7CF8" Guid="*">
                 <File Id="filFE982ED3024ADA283976262AD8289DB3" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IndexHealth.psm1" />
             </Component>
-            <Component Id="cmp46DC3DA54126B94CAAFB9A1890D4FFFF" Guid="*">
-                <File Id="fil3E60F7E9DC00513F42B7A9E19E88C49C" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IPM_AnalyzerUtils.psm1" />
-            </Component>
-            <Component Id="cmp93CB846B169CCC2BAF8C8FD6E8603704" Guid="*">
-                <File Id="fil0ADF8964EE9ACEC28A578E602520BEFA" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IPM_Resets.psm1" />
-            </Component>
-            <Component Id="cmpB6EBB42C61CF65FB72D80D8D67A4D90D" Guid="*">
-                <File Id="fil6262320417BBAC432468991BB1A1140A" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IPM_Utils.psm1" />
-            </Component>
-            <Component Id="cmpFC0218A587B7DE04D836B9BF9E83A827" Guid="*">
-                <File Id="fil5A926DB3ABF289C2BE5CBC706A8B96E5" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IPM_ValidationUtils.psm1" />
-            </Component>
             <Component Id="cmp00ACDACD812BD8A98D74D0C0FF1E7776" Guid="*">
                 <File Id="filFCB825E8A7AE858B3C075690E581A61F" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_Jobs.psm1" />
             </Component>
@@ -90,10 +78,6 @@
             <ComponentRef Id="cmp3D19CE2E34721427F30B4E8C33C6083A" />
             <ComponentRef Id="cmpA16E9EE9A5821572FFD13533B756EB8B" />
             <ComponentRef Id="cmp9A4FA6D846804B486C31FB685D4C7CF8" />
-            <ComponentRef Id="cmp46DC3DA54126B94CAAFB9A1890D4FFFF" />
-            <ComponentRef Id="cmp93CB846B169CCC2BAF8C8FD6E8603704" />
-            <ComponentRef Id="cmpB6EBB42C61CF65FB72D80D8D67A4D90D" />
-            <ComponentRef Id="cmpFC0218A587B7DE04D836B9BF9E83A827" />
             <ComponentRef Id="cmp00ACDACD812BD8A98D74D0C0FF1E7776" />
             <ComponentRef Id="cmp09F9AADCC6505EDBD91FFDC2C68E17F1" />
             <ComponentRef Id="cmp46AD9A848D4777A4A6F6080157A75676" />

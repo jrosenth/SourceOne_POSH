@@ -28,8 +28,9 @@
       <ComponentGroupRef Id="RegistryComponents" />    
     </Feature>
 
-    <WixVariable Id="WixUIDialogBmp" Value="Images/PSRedefine2.bmp" />
-    <WixVariable Id="WixUIBannerBmp" Value="Images/EMC_2015.bmp" />
+    <!-- WixVariable Id="WixUIDialogBmp" Value="Images/PSRedefine2.bmp" / -->
+    <WixVariable Id="WixUIDialogBmp" Value="Images/SDSAmericas_2017.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="Images/DellEMC_2017.bmp" />
     <Icon Id="icon.ico" SourceFile="Images\es1poshshortcut.ico"/>
     <Icon Id="shortcutIcon.exe" SourceFile="$(var.SolutionDir)\$(var.Configuration)\ShortcutIcon.exe"/>
     <Property Id="ARPPRODUCTICON" Value="icon.ico" />
@@ -45,7 +46,7 @@
     <UI Id="UserInterface">
       <Property Id="WIXUI_INSTALLDIR" Value="TARGETDIR" />
       <Property Id="WixUI_Mode" Value="Custom" />
-      <TextStyle Id="MyBannerFont" FaceName="Tahoma" Size="10" Bold="yes" Red="255" Green="255" Blue="255" />
+      <TextStyle Id="MyBannerFont" FaceName="Tahoma" Size="10" Bold="yes" Red="0" Green="0" Blue="0" />
       <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
       <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="9" Bold="yes" />
       <TextStyle Id="WixUI_Font_Title"  FaceName="Tahoma" Size="9" Bold="yes" />

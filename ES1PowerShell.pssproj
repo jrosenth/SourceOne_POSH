@@ -51,10 +51,6 @@
     <Compile Include="SourceOne_POSH\ES1_Configuration.psm1" />
     <Compile Include="SourceOne_POSH\ES1_DBUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_GCWorkaround.psm1" />
-    <Compile Include="SourceOne_POSH\ES1_IPM_AnalyzerUtils.psm1" />
-    <Compile Include="SourceOne_POSH\ES1_IPM_Resets.psm1" />
-    <Compile Include="SourceOne_POSH\ES1_IPM_Utils.psm1" />
-    <Compile Include="SourceOne_POSH\ES1_IPM_ValidationUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_ObjectsAndTypes.psm1" />
     <Compile Include="SourceOne_POSH\ES1_Policy.psm1" />
     <Compile Include="SourceOne_POSH\ES1_SQLFuncs.psm1" />
