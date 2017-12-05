@@ -4,9 +4,11 @@ This project contains a Powershell module for managing an EMC SourceOne environm
 
 Requirements
 ========================================
-..* EMC SourceOne Version 7.2 or greater
-..* PowerShell 4 or greater
-..* .NET 4 or greater
+  * EMC SourceOne Version 7.1.3 or greater
+
+  * PowerShell 4 or greater
+
+  * .NET 4 or greater
 
 
 Description
