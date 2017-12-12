@@ -42,9 +42,17 @@ If you wanted to "get-help" on all cmdlets and functions contained within the "S
 
            Get-Command -module SourceOne_POSH | Get-Help -detail
 
+Contribution
+=========================================
+Create a fork of the project into your own reposity. Make all your necessary changes and create a pull request with a description on what was added or removed and details explaining the changes in lines of code. If approved, project owners will merge it.
+
 
 Licensing
 ========================================
 SourceOne PowerShell is freely distributed under the <a href="http://emccode.github.io/sampledocs/LICENSE">MIT License</a>. See LICENSE for details.
 
 NOTE: Some included utility and helper functions are licensed under the MICROSOFT LIMITED PUBLIC LICENSE.
+
+Support
+========================================
+Please file bugs and issues on the Github issues page for this project. This is to help keep track and document everything related to this repo. For general discussions and further support you can join the <a href="http://community.codedellemc.com"> {code} Community slack channel </a>. The code and documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.
