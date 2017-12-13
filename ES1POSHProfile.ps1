@@ -75,8 +75,7 @@ $version = (Get-Module SourceOne_POSH).version.ToString()
 # Launch text
 write-host ""
 write-host "                 Welcome to the $productName! (v $version)"
-write-host " Copyright (C) 2015 EMC Corp. Professsional Services, All rights reserved."
-write-host "                 Email questions or problems to SourceOneTools@emc.com"
+write-host "                 Questions or problems should be posted in the Issues section on GitHub"
 write-host ""
 write-host "To find out what commands are available, type          : " -NoNewLine
 write-host "Get-ES1Commands" -foregroundcolor yellow

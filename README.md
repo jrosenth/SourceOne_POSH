@@ -1,6 +1,6 @@
 EMC SourceOne PowerShell Module
 =========================================
-This project contains a Powershell module for managing an EMC SourceOne environment.
+This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
 
 Requirements
 ========================================
@@ -27,7 +27,14 @@ This module also require PowerShell 4.  The underlying COM objects require .NET 
 
 Installation
 =========================================
-Coming soon..
+There are two methods for installing the SourceOne Powershell.
+
+ * Download and execute the Windows based installer (ES1PowerShellInstall.msi) on a machine with SourceOne installed on it.  It is recommended installing on the same machine as the SourceOne console application, but not required.
+   The installer creates a desktop shortcut, installs the module into the SourceOne binary installation location and adds that location to the system environment variable PSModulePath making the module easily available to any PowerShell instance.
+
+ * Download the contents of the SourceOne_POSH directory and copy it into a directory named "SourceOne_POSH" on a machine with SourceOne installed on it.  Then use the explicit "Import-Module" command to load the module specifying the full path of the directory.
+
+  There are other methods for installing and loading modules in PowerShell. See <a href="https://msdn.microsoft.com/en-us/library/dd878350(v=vs.85).aspx"> Installing a PowerShell Module </a> and <a href="https://msdn.microsoft.com/en-us/library/dd878284(v=vs.85).aspx"> Importing a PowerShell Module </a> for more information.
 
 
 Available Commands
