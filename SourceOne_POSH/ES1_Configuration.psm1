@@ -1460,18 +1460,18 @@ else
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Usefull for creating new scripts from commands in an interactive session
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Usefull for creating new scripts from commands in an interactive session
+
 .EXAMPLE
-   <An example of using the script>
+	Get-RecentCommands
 #>
 
 function Get-RecentCommands
 {
- #usefull for creating new scripts from commands in session
+ # Useful for creating new scripts from commands in session
 Get-History | Select-Object commandline
 }
 
