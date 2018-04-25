@@ -14,4 +14,4 @@ build:
   verbosity: minimal
 
 artifacts:
-  - path: sourceone-posh\Release\en-us\ES1PowerShellInstall.msi
+  - path: C:\projects\sourceone-posh\Release\en-us\ES1PowerShellInstall.msi
