@@ -12,4 +12,6 @@ build:
   project: ES1PowerShell.sln
   parallel: false
   verbosity: minimal
-  
+
+artifacts:
+  - path: sourceone-posh\Release\en-us\ES1PowerShellInstall.msi
