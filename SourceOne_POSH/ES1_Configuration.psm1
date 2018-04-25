@@ -1,12 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_Configuration.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
-	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -48,8 +44,8 @@ process {
 	#-------------------------------------------------------------------------------
 
 
-	Get-ES1ActivityObj | out-null
-	$actDbServer = $Script:s1actSErver
+	Get-ES1ActivityDB | out-null
+	$actDbServer = $Script:s1ActServer
 	$actDb = $Script:S1Actdb
 
 	#-------------------------------------------------------------------------------
@@ -152,28 +148,157 @@ end{}
 
 }
 
+<#
+.SYNOPSIS
+ Gets a list of S1 machines and the S1 installed executables and DLL 
+files in the S1 installation directory
+.DESCRIPTION
+Gets a list of S1 machines and the S1 installed executables and DLL
+files in the S1 installation directory
+.OUTPUTS
 
-function Get-ES1InstallDir
+.EXAMPLE
+
+#>
+function Get-ES1Executables
 {
+[CmdletBinding()]
+param( )
+
+begin{}
+process {
+	[bool] $onMaster = Test-IsOnS1Master
+	$scriptComputerName = [environment]::MachineName
+
+	#-------------------------------------------------------------------------------
+	# Get Activity Database
+	#-------------------------------------------------------------------------------
+
+	Get-ES1ActivityDB | out-null
+	$actDbServer = $Script:s1ActServer
+	$actDb = $Script:S1Actdb
+
+	#-------------------------------------------------------------------------------
+	# Get List known of SourceOne Servers
+	#-------------------------------------------------------------------------------
+	$cServers = @()
+	$cServers += $scriptComputerName
+
+	# Get SourceOne Worker Servers
+	$dbName = $actDb
+	$dbServer = $actDbServer
+
+	$dtResults = Get-ES1Workers 
+	foreach ($row in $dtResults)
+	{
+		$cServers += ($row[0].Split("."))[0]
+	}
+
+
+	$dtResults = @(Get-ES1Archivers)
+	foreach ($row in $dtResults)
+	{
+		$cServers += ($row.Split("."))[0]
+	} 
+
+
+	# Remove Duplicates from SourceOne Server List
+	$cServers = @($cServers | Select -uniq | Sort)
+	$AllBinaries = @()
+
+	Write-Debug "Server Count is: $($cServers.Count)"
+	$local = hostname
+
+	# Process each Server
+	foreach ($server in $cServers)
+	{
+		# Write-Host 'Getting binaries from server : ' $server
+
+		try {
+			$installPath = S1Dir $server
+
+			# Append * so the -Include filter works...
+			$installPath += '\*'
+
+			if ($server -eq $local)
+			{
+				$exeFiles = ls -recurse -path $installpath -Include @("*.exe","*.dll") | select-object -ExpandProperty VersionInfo 
+				$AllBinaries += $exeFiles
+			}
+			else
+			{
+
+				if (Test-PsRemoting $server)
+				{
+
+					$files = Invoke-Command -Cn $server -ScriptBlock{
+						$exeFiles = ls -recurse -path $Args[0] -Include @("*.exe","*.dll") | select-object -ExpandProperty VersionInfo 
+						$exeFiles
+					} -Args $installPath -ErrorVariable remoteErr -ErrorAction SilentlyContinue
+
+					# $remoteErr contains any error message from the remote system
+					if ($remoteErr)
+					{
+						write-warning $remoteErr
+						$props = [ordered]@{'PSComputerName'=$server;'FileName'=$remoteErr ;'FileVersion'="ERROR"}
+						$AllBinaries += New-object -TypeName PSObject -Prop $props
+					}
+					else
+					{
+						$AllBinaries += $files
+					}
+				}
+				else
+				{
+					write-warning "**** Ps Remoting is not enabled on remote $server ******"
+					$props = [ordered]@{'PSComputerName'=$server;'FileName'='NA' ;'FileVersion'="Unreachable - Powershell remoting not enabled"}
+					$AllBinaries += New-object -TypeName PSObject -Prop $props
+				}
+			}
+		}
+		catch 
+		{
+			Write-Warning "Error Reading registry on machine : $server"
+			Write-Warning "Make sure the machine is up and reachable on the network"
+			$props = [ordered]@{'PSComputerName'=$server;'FileName'=$_.Exception.Message ;'FileVersion'="NA"}
+			$AllBinaries += New-object -TypeName PSObject -Prop $props
+
+			continue
+		} 
+
+	} 
+
+	
+	$AllBinaries
+
+}
+end{}
+
+}
+
 <#
 .SYNOPSIS
  Returns a string containing the S1 install directory from the machine specified (defaults to current machine)
+
 .DESCRIPTION
-Returns a string containing the S1 install directory from the machine specified
-The Value is retrieved from the machine registry.
+ Returns a string containing the S1 install directory from the machine specified
+ The Value is retrieved from the machine registry.
+
 .PARAMETER server
-server or host Name to get the S1 install directory from
+ server or host Name to get the S1 install directory from
 
 .OUTPUTS
-set Session variable $S1InstallDir
-.EXAMPLE Show the folder
-Get-ES1InstallDir
-D:\Program Files\EMC SourceOne
-.EXAMPLE update $S1InstallDir
-Get-ES1InstallDir | out-null
-D:\Program Files\EMC SourceOne
+ Set a session variable $S1InstallDir
 
+.EXAMPLE 
+    Get-ES1InstallDir
+    D:\Program Files\EMC SourceOne
+.EXAMPLE 
+    Get-ES1InstallDir | out-null
+    D:\Program Files\EMC SourceOne
 #>
+function Get-ES1InstallDir
+{
 [CmdletBinding()]
 param( 
 	[string] $server = $env:computername
@@ -228,7 +353,7 @@ $emcRegLoc = ''
 $s1ActServer = ''
 $s1ActDb = ''
 $s1ActObject = @{}
-$s1Workers = @()
+
 $s1Archivers = @()
 $s1serverList = @()
 $s1servers = @()
@@ -253,18 +378,27 @@ $AgentTable = @{'EMC SourceOne Console' = 'Console';
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+  Returns a string containing the HKLM base path in the windows registry where SourceOne settings are found based on the
+  OS architecture (64 bit or 32 bit)
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Returns a string containing the HKLM base path in the windows registry where SourceOne settings are found based on the
+   OS architecture (64 bit or 32 bit).  Depending on the OS either "HKLM:\SOFTWARE\Wow6432Node"  or "HKLM:\SOFTWARE" will be returned.
+
+.OUTPUTS
+  <TBD>
+
 .EXAMPLE
-   <An example of using the script>
+   $OSRegBase = Get-ES1RegBase
 #>
 function Get-ES1RegBase
 {
- [CmdletBinding()]
-param()
+
+[CmdletBinding()]
+Param()
+
+Begin{}
+Process {
 if ($Script:s1RegBase -eq '')
 {
 	if (Test-Path -Path HKLM:\SOFTWARE\Wow6432Node\EMC\SourceOne)
@@ -283,15 +417,25 @@ if ($Script:s1RegBase -eq '')
 	$script:S1RegBase
 }
 
+END {}
+
+}
+
 <#
 .SYNOPSIS
-   <A brief description of the script>
+  Returns a string containing the HKLM full path in the windows registry where SourceOne settings are found based on the
+  OS architecture (64 bit or 32 bit).
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+  Returns a string containing the HKLM full path in the windows registry where SourceOne settings are found based on the
+  OS architecture (64 bit or 32 bit).  Depending on the OS architecture either "HKLM:\SOFTWARE\Wow6432Node\EMC\SourceOne\"  
+  or "HKLM:\SOFTWARE\EMC\SourceOne\" will be returned.
+
+.OUTPUTS
+  <TBD>
+
 .EXAMPLE
-   <An example of using the script>
+
 #>
 function Get-ES1RegEntry
  {
@@ -301,24 +445,27 @@ function Get-ES1RegEntry
 	if ($Script:emcRegEntry -eq '')
 	{
 		$Script:emcRegEntry = $script:S1RegBase + "\EMC\SourceOne\"
-
-
 	}
-	$s1R = $Script:emcRegEntry.Replace("HKLM:","HKEY_LOCAL_MACHINE")
-	$s1R = "Registry::" + $s1R 
 
 	$Script:emcRegEntry
 } 
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+  Returns a string containing full provider name and HKLM path in the windows registry where SourceOne settings are found 
+  based on the OS architecture (64 bit or 32 bit).
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+  Returns a string containing full provider name and HKLM path in the windows registry where SourceOne settings are found 
+  based on the OS architecture (64 bit or 32 bit).  Either "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\EMC\SourceOne\"
+  or "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\EMC\SourceOne\"
+
+.OUTPUTS
+  <TBD>
+
 .EXAMPLE
-   <An example of using the script>
+  $s1Registry= Get-ES1RegLocation
+
 #>
 function Get-ES1RegLocation
 {
@@ -334,13 +481,18 @@ $Script:emcRegLoc
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Returns a string containing the full path of the SourceOne install directory on tghe current machine.  This is obtained from the 
+   Windows registry.
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Returns a string containing the full path of the SourceOne install directory on tghe current machine.  This is obtained from the 
+   Windows registry.
+
+.OUTPUTS
+  <TBD>
+
 .EXAMPLE
-   <An example of using the script>
+	$S1InstallDir=Get-ES1InstallFolders
 #>
 function Get-ES1InstallFolders
  {
@@ -361,8 +513,8 @@ function Get-ES1InstallFolders
    Get-ES1JobLogDir
 .DESCRIPTION
    Retrieve the location of the SourceOne JobLogs share
-.OUTPUT
- Set Session variable $s1JobLogDir
+.OUTPUTS
+ Sets a session variable $s1JobLogDir
 .EXAMPLE
    Get-ES1JobLogDir
    \\master\JobLogs
@@ -390,7 +542,7 @@ function Get-ES1JobLogDir
 			if (!(Test-Path $Script:s1JobLogDir)) 
 			{
 				# this statement is not viewable if this function is called indirectly.
-				Write-output "Job share location is not valid"
+				Write-Host "Job share location is not valid"
 				$Script:s1JobLogDir = ''
 			}
 		}
@@ -399,32 +551,7 @@ function Get-ES1JobLogDir
 
 }
 
-<#
-.SYNOPSIS
-   <A brief description of the script>
-.DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
-.EXAMPLE
-   <An example of using the script>
-#>
-function Set-ES1JobLogDir 
-{
-	[CmdletBinding()]
-	param(
-		[Parameter(Mandatory=$true)]
-		[string] $loc)
-	if (Test-Path $loc) 
-	{
-		$Script:s1JobLogDir = $loc
-	}
-	else
-	{
-		Write-Output "$loc is not a valid path"
-	}
 
-}
 
 <#
 .SYNOPSIS
@@ -436,59 +563,31 @@ function Set-ES1JobLogDir
 .EXAMPLE
    <An example of using the script>
 #>
-function Set-ES1ActivityInfo
-{
- [CmdletBinding()]
-param(
-	[Parameter(Mandatory=$true)]
-	[string] $SQLserver,
-	[Parameter(Mandatory=$true)]
-	[string]$ActivityDb)
 
-$script:s1ActServer = $SQLserver
-$script:s1actDb = $ActivityDb
 
-$script:s1ActInfo = @{'ActivityServer'=$script:S1ActServer;'ActivityDb'=$script:s1ActDb}
-$script:s1ActObject = New-Object -TypeName psobject -Property $s1ActInfo
-$script:s1ActObject
-}
-
-<#
-.SYNOPSIS
-   <A brief description of the script>
-.DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
-.EXAMPLE
-   <An example of using the script>
-#>
-#-------------------------------------------------------------------------------
-# Get Activity Database
-#-------------------------------------------------------------------------------
-function Get-ES1ActivityObj
+function Get-ES1ActivityDatabase
 {
 <#
 .SYNOPSIS
- Get-ES1ActivityObj 
+  Gets the SourceOne SQL server and activity DB Name and if not already set, sets the session global
+  variables $s1ActServer and $s1actDb
 .DESCRIPTION
-This function will retreive the SourceOne SQL server and activity DB Name into
-the variables $s1ActServer and $s1actDb
+ Gets the SourceOne SQL server and activity DB Name and if not already set, sets the session global
+  variables $s1ActServer and $s1actDb
+
 .PARAMETER <Force>
-the Force parameter will cause values to be updated/refreshed>
+	the Force parameter will cause the session gloabl values to be updated/refreshed
 .EXAMPLE
-Get-ES1ActivityObj
-
-SQL01
-ES1Activity
-
-.OUTPUT
+	$activityDB=Get-ES1ActivityDatabase
 
 .EXAMPLE
-Get-ES1ActivityObj -force
+	Get-ES1ActivityDatabase -force
+	
+    DBName      DBServer
+    ----------  --------------
+    ES1Activity SQL2008   
 
-SQL01
-ES1Activity
+.OUTPUTS
 
 #>
 [CmdletBinding()]
@@ -497,8 +596,6 @@ param(
 )
 try
 {
-
-
 	if ($force -or ($Script:s1ActServer -eq '') -or ($Script:s1ActDb -eq ''))
 	{
 
@@ -514,7 +611,7 @@ try
 			$script:s1ActDb = Read-Host "enter the name of the SourceOne Activity Database"
 		}
 
-		$script:s1ActInfo = @{'ActivityServer'=$script:S1ActServer;'ActivityDb'=$script:s1ActDb}
+		$script:s1ActInfo = @{'DBServer'=$script:S1ActServer;'DBName'=$script:s1ActDb}
 		$script:s1ActObject = New-Object -TypeName psobject -Property $s1ActInfo
 		$script:s1ActObject
 	}
@@ -537,7 +634,7 @@ catch
   Get-ES1Archivers
 .DESCRIPTION
   Retrieve information from SQL about SourceOne Archive servers
-.OUTPUT
+.OUTPUTS
  Sets session array $s1Archivers
 .EXAMPLE
    Get-ES1Archivers
@@ -551,9 +648,9 @@ function Get-ES1Archivers
  [CmdletBinding()]
 param()
 #-------------------------------------------------------------------------------
-# Get Archive Databases
+# Get Activity Database
 #-------------------------------------------------------------------------------
-Get-ES1ActivityObj | out-null
+Get-ES1ActivityDB | out-null
 
 $sqlQuery = @'
 Select Name AS Connection,
@@ -563,7 +660,7 @@ From ProviderConfig (nolock)
 Where ProviderTypeID <> 5 AND State = 1    
 '@
 
-$dtConnections = Invoke-ES1SQLQuery $Script:s1actSErver $Script:S1Actdb $sqlQuery
+$dtConnections = Invoke-ES1SQLQuery $Script:s1ActServer $Script:S1Actdb $sqlQuery
 
 
 $cServers = @() 
@@ -706,8 +803,9 @@ $Script:s1serverList
    Get-ES1Servers
 .DESCRIPTION
    Retrieve a list/array of all SourceOne servers (workers and archivers)
-.OUTPUT
-  sets session array $s1Servers
+.OUTPUTS
+  Sets a session (global) array called $s1Servers with 
+
 .EXAMPLE
    Get-ES1Servers
    
@@ -744,7 +842,7 @@ $Script:s1servers
    The uninstall registry key is queried
 .PARAMETER computername
    name or IP of the server to query
-.OUTPUT
+.OUTPUTS
   a session array $s1SWObjects is populated and displayed
 .EXAMPLE
    Get-ES1ServerSoftwareInfo master
@@ -770,7 +868,7 @@ $Script:s1SWObjects = @()
 
 $b = get-ES1RegBase
 $b = $b.replace('HKLM:\','')
-$entry = $b + "\Microsoft\WIndows\CurrentVersion\Uninstall"
+$entry = $b + "\Microsoft\Windows\CurrentVersion\Uninstall"
 write-verbose $ComputerName
 
 $Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $ComputerName)
@@ -805,7 +903,7 @@ if ($Key)
 							$agentname = $AgentTable.$dname
 						}
 
-						$swInfo = @{'DisplayName'=$dname;'Version'=$dvers;'AgentName'=$agentname}
+						$swInfo = [ordered]@{'DisplayName'=$dname;'Version'=$dvers;'AgentName'=$agentname}
 						$swobj = New-Object -TypeName psobject -Property $swinfo
 						$Script:s1SWObjects += $swobj
 
@@ -866,7 +964,7 @@ foreach ($comp in $Script:s1servers)
 		$srvObjects = @(get-es1Services $comp)
 		$swObjects = @(get-ES1ServerSoftwareInfo $comp)
 
-		$mainprops = @{servername=$comp;
+		$mainprops = [ordered] @{servername=$comp;
 			Software = $swObjects;
 			Services = $srvObjects}
 		$mainobject = New-Object -Type psobject -Property $mainprops
@@ -875,7 +973,7 @@ foreach ($comp in $Script:s1servers)
 	}
 	catch
 	{
-
+		
 	}
 
 }
@@ -946,19 +1044,25 @@ foreach ($obj in $Script:s1ServerInfoObjects)
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Gets a list of objects containing simplified name for each installed service  
+   for each discoverable SourceOne machine.
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Gets a list of objects containing simplified name for each installed service  
+   for each discoverable SourceOne machine.  The simple name if derived from an internal table
+   lookup.
+
 .EXAMPLE
-   <An example of using the script>
+   Get-ES1AgentListObjs
+
 #>
 function Get-ES1AgentListObjs
 {
 [CmdletBinding()]
 param
 ()
+
+$Script:s1InstallObjects=@()
+
 $S1InfoObjs = Get-ES1AllServerInfoObjects
 
 
@@ -989,11 +1093,13 @@ foreach ($s in $S1InfoObjs)
 		}
 	}
 
-	$installInfo = @{'MachineName'=$mname;'Role'=$RoleStr}
+	$installInfo = [ordered]@{'MachineName'=$mname;'Role'=$RoleStr}
 	$installObj = New-Object -TypeName psobject -Property $installInfo
+
 	$Script:s1InstallObjects += $installObj
 
 }
+
 $Script:s1InstallObjects
 
 }
@@ -1001,110 +1107,171 @@ $Script:s1InstallObjects
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Sets the SourceOne logging trace verbosity level in the Windows registry for the specified component
+   on the specified computer.  The component name is the same value as shown in the registry.
+   Setting or changing a trace verbosity level will force logging to be enabled and set the maximum number 
+   of split files.
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Sets the SourceOne logging trace verbosity level in the Windows registry for the specified component
+   on the specified computer.  The component name is the same value as shown in the registry.
+   Setting or changing a trace verbosity level will force logging to be enabled and set the maximum number 
+   of split files.
+
+.PARAMETER Computer
+	Name of the computer to change the trace settings on
+.PARAMETER component
+	Name of the component.  Should be an exact match to the value in the "TraceLogs" registry hive.
+.PARAMETER level
+	Logging/trace level.  Valid range is 0 - 7
+.PARAMETER split
+	Maximum number of "split" logfiles to keep on disk
+.PARAMETER disable
+	Disable logging for the component
+
+
 .EXAMPLE
-   <An example of using the script>
+   Set-ES1Trace -level 0 -component exarchivejbc.exe
+
 #>
 function Set-ES1Trace 
 {
-	[CmdletBinding()]
-	param
-	(		[string] $component, [string] $level = 4,$split = 10,[switch] $disable,$Computer = $env:COMPUTERNAME )
+[CmdletBinding()]
+PARAM([Parameter(Mandatory=$true)]
+	[string] $component,
+	[Parameter(Mandatory=$false)] 
+	[ValidateRange(0,7)] [int] $level = 4,
+	[Parameter(Mandatory=$false)]
+	[int]$split = 10,
+	[Parameter(Mandatory=$false)]
+	[switch] $disable,
+	[Parameter(Mandatory=$false,
+		ValueFromPipeLine=$true, 
+		ValueFromPipeLineByPropertyName=$true)]
+	[string[]]$ComputerArray =$env:COMPUTERNAME)
+	
+
+BEGIN {
+	$Results=@()
+}
+
+PROCESS {
+
+	Write-Host ""
+
 	$ON = '1'
-	if ($disable) {$ON = '0'}
-
-
-	$b = get-ES1RegBase
-	$b = $b.replace('HKLM:\','')
-	$entry = $b + "\EMC\SourceOne\Tracelogs"
-
-	if ($component -ne $null)
+	if ($disable) 
 	{
-		$EMCTraceSettings = $entry + "\$component\Settings"
-		write-verbose $EMCTraceSettings
-		$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
+		$ON = '0'
+	}
 
+	foreach ($Computer in $ComputerArray )
+	{
+		$b = get-ES1RegBase
+		$b = $b.replace('HKLM:\','')
+		$entry = $b + "\EMC\SourceOne\Tracelogs"
 
-		try
+		if ($component -ne $null)
 		{
-			$Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $Computer)
-			if ($Reg)
+			$EMCTraceSettings = $entry + "\$component\Settings"
+			write-verbose $EMCTraceSettings
+			$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
+
+			try
 			{
-				$Key = $Reg.OpenSubKey("$EMCTraceSettings",$true)
-
-			}
-		}
-		catch 
-		{
-			write-error "Error accessing registry "
-			return
-		}
-
-		if ($key -ne $null)
-		{
-
-			if ($level.length -gt 0)
-			{
-				$x = $key.GetValue("TraceVerbosity")
-				if ($level -ge 0 -and $level -lt 8)
+				$Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $Computer)
+				if ($Reg)
 				{
+					$Key = $Reg.OpenSubKey("$EMCTraceSettings",$true)
+
+				}
+			}
+			catch 
+			{
+				write-error "Error accessing registry on $($Computer)"
+				$props = [ordered]@{'Computer'=$Computer;'Component'=$component ;'OldVerbosity'= 'NA'; 'TraceVerbosity'='NA';'Enabled'='NA'; 'Splits'='NA'}
+				$Results += New-object -TypeName PSObject -Prop $props
+
+				return
+			}
+
+			if ($key -ne $null)
+			{
+
+				if ($level.length -gt 0)
+				{
+					$x = $key.GetValue("TraceVerbosity")
 
 					$key.SetValue("TraceVerbosity",$level,[Microsoft.Win32.RegistryValueKind]::DWORD) 
-					write-host "Modified tracesetting for $component from $x to $level"
+					#write-host "Modified tracesetting on $($Computer) for $component from $x to $level"
+
+				}
+				#ensure that MaxFileSplits are set and Tracing is enabled.
+				$FileKey = $Reg.OpenSubKey("$EMCTraceSettings\\Listeners\\File",$true)
+				if ($FileKey)
+				{
+					$FileKey.SetValue("Enabled",$ON,[Microsoft.Win32.RegistryValueKind]::DWORD) 
+					$FileKey.SetValue("MaxFileSplits",$split,[Microsoft.Win32.RegistryValueKind]::DWORD) 
+
+					#Write-Host "Logging Enabled = $ON, Max File Spilts set to $split"
+				
+					$props = [ordered]@{'Computer'=$Computer;'Component'=$component ;'OldVerbosity'= $x; 'TraceVerbosity'=$level;'Enabled'=$ON; 'Splits'=$split}
 				}
 				else
 				{
-					write-host level must be between 0 and 7
-
+					$props = [ordered]@{'Computer'=$Computer;'Component'=$component ;'OldVerbosity'= $x; 'TraceVerbosity'=$level;'Enabled'='NA'; 'Splits'='NA'}
 				}
+
 			}
-			#ensure that MaxFileSplits are set and Tracing is enabled.
-			$FileKey = $Reg.OpenSubKey("$EMCTraceSettings\\Listeners\\File",$true)
-			if ($FileKey)
+			else
 			{
-				$FileKey.SetValue("Enabled",$ON,[Microsoft.Win32.RegistryValueKind]::DWORD) 
-				$FileKey.SetValue("MaxFileSplits",$split,[Microsoft.Win32.RegistryValueKind]::DWORD) 
-
-				WRite-Host "Logging Enabled = $ON, Max File Spilts set to $split"
+				$props = [ordered]@{'Computer'=$Computer;'Component'=$component ;'OldVerbosity'= 'NA'; 'TraceVerbosity'='NA';'Enabled'='NA'; 'Splits'='NA'}
+				write-host "Error reading Trace Setting for $component on  $($Computer)" -ForegroundColor Red
 			}
-
+			
 		}
-		else
-		{
-
-			write-host "Error reading Trace Setting for $component"
-		}
-
+			
+		$Results += New-object -TypeName PSObject -Prop $props
+		
 	}
 
+}  # end PROCESS
 
-
-
+END{
+	$Results
+}
 
 }
 
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Sets the SourceOne logging trace level in the Windows registry for the all installed components
+   on the specified computer to the specified level.  Default level is 0 if none is specified.
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Sets the SourceOne logging trace level in the Windows registry for the all installed components
+   on the specified computer to the specified level.  Default level is 0 if none is specified.
+
 .EXAMPLE
-   <An example of using the script>
+   Set-ES1ResetTraceAll
 #>
 function Set-ES1ResetTraceAll 
 {
 	[CmdletBinding()]
-	param
-	(		[string] $level = 0,$split = 10,[switch] $disable,$Computer = $env:COMPUTERNAME )
+	PARAM(
+	[Parameter(Mandatory=$false)] 
+	[string] $level = 0,
+	[Parameter(Mandatory=$false)]
+	$split = 10,
+	[Parameter(Mandatory=$false)]
+	[switch] $disable,
+	[Parameter(Mandatory=$false)]
+	[string] $Computer = $env:COMPUTERNAME )
+
 	$ON = '1'
-	if ($disable) {$ON = '0'}
+	if ($disable) 
+	{
+		$ON = '0'
+	}
 
 	$b = get-ES1RegBase
 	$b = $b.replace('HKLM:\','')
@@ -1121,7 +1288,7 @@ function Set-ES1ResetTraceAll
 	}
 	catch 
 	{
-		write-error "Error accessing registry "
+		write-error "Error accessing registry on $($Computer)"
 		return
 	}
 	if ($key)
@@ -1131,122 +1298,59 @@ function Set-ES1ResetTraceAll
 		foreach ($entry in $TraceLogKeys)
 		{
 
-			Set-ES1Trace -component $entry -level $level 
+			Set-ES1Trace -component $entry -level $level -computer $Computer
 
 		}
 
 	}
 	else
 	{
-		write-host "No trace setting found"
+		write-host "No trace setting found $($Computer)"
 
 	}
 
 }
 
 
-<#
-.SYNOPSIS
-   <A brief description of the script>
-.DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
-.EXAMPLE
-   <An example of using the script>
-#>
-function Remove-AgedFiles
-{
-[CmdletBinding()]
-param($tfile,$days = 0)
-
-write-verbose $tfile
-
-$age = @{Name='Age';Expression={($_ | new-timespan).days}}
-
-$x = @(gci $tfile | Select-Object -Property Name,FullName,$age)
-write-verbose $x.count
-
-for ($i = 0; $i -lt $x.count; $i++)
-{
-	$a = $x[$i].age
-	write-verbose "age of file is $a days"
-
-	if ($x[$i].age -ge $days)
-	{
-		$f = $x[$i].fullname
-		write-output "Removing file $f"
-		try
-		{
-			$f
-			remove-item $f -force -errorvariable err -erroraction silentlycontinue
-		}
-		catch
-		{
-			write-verbose "exception Removing file $f"
-		}
-
-		if ($err.count -eq 0 )
-		{
-
-			Write-Output "deleted  $f"
-		}
-
-	}
-}
-
-}
-
-<#
-.SYNOPSIS
-   <A brief description of the script>
-.DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
-.EXAMPLE
-   <An example of using the script>
-#>
-function Remove-ES1TraceLogs
-{
-[CmdletBinding()]
-param($fileSpec = "*.log",$days = 0)
-
-if ($fileSpec -ne $null)
-{
-
-	$eLoc = Get-ES1InstallFolders
-	$eLog = $eLoc + "logs\"
-	$eLogSpec = $eLog + $fileSpec
-	gci $eLogSpec
-
-	Remove-AgedFiles $eLogSpec $days
-
-}
-else
-{
-	write-host "specify a file spec"
-}
-
-}
 
 $s1InstallDir = ''
 $s1LogDir = ''
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Gets a list of the SourceOne logs files from the SourceOne Logs directory
+
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Gets a list of the SourceOne logs files from the SourceOne Logs directory.
+   The return list contains System.IO.FileInfo objects.
+
+.PARAMETER filespec
+   If provided only, that file if returned.
 .EXAMPLE
-   <An example of using the script>
+   Get-ES1TraceLogs
+   
+    Directory: C:\Program Files (x86)\EMC SourceOne\logs
+
+Mode                LastWriteTime     Length Name
+----                -------------     ------ ----
+-a---         1/25/2017   2:55 PM          2 CExNotesInit.log
+-a---        12/14/2017   2:33 PM   75552228 EmailXtenderSystemTrace.log
+-a---          9/7/2017   2:17 PM    1071092 ES1AddressResolutionService.exe.log
+-a---          8/3/2015   3:01 PM      36644 ExArchiveJBC.exe.log
+-a---          8/3/2015   3:09 PM      83478 ExArchiveJBS.exe.log
+-a---        12/14/2017   2:33 PM   59876752 ExJBJournal.exe.log
+-a---        12/14/2017   1:51 PM    2076570 ExJournalJBS.exe.log
+-a---         4/12/2017   5:36 PM     152446 ExMMCAdmin.dll.log
+-a---         1/25/2017   2:55 PM          2 ExNotesApi.DLL.log
+
+
 #>
-function Show-ES1TraceLogs
+function Get-ES1TraceLogs
 {
 [CmdletBinding()]
-param($fileSpec)
+
+param([Parameter(Mandatory = $false)]
+       [string] $fileSpec)
 
 $eLoc = Get-ES1InstallFolders
 $eLog = $eLoc + "logs\"
@@ -1263,9 +1367,9 @@ $WaitZipTime = 1
 
 <#
 .SYNOPSIS
-   Compress-FileListToZip
+   Compress a list of files into the named zip file.  Uses the Windows Shell.Application COM object
 .DESCRIPTION
-	compress a list of files into the named zip
+	Compress a list of files into the named zip file.  Uses the Windows Shell.Application COM object
 
 .PARAMETER zipspec
 	name of the zip file to create/update
@@ -1287,17 +1391,6 @@ function Compress-FileListToZip
 
 BEGIN {
 
-	# This logic doesnt work if a UNC is passed in !!
-	#if ($zipspec -notmatch ':')
-	#{
-	#	$loc = Get-Location
-	#	$zipname = $loc.ToString() + "\$zipspec"
-	#}
-	#else
-	#{
-	#	$zipname = $zipspec
-	#}
-	
 	$zipname = $zipspec
 
 	if (-not $zipname.EndsWith('.zip')) {$zipname += '.zip'} 
@@ -1309,8 +1402,12 @@ BEGIN {
 	{
 		Write-Verbose "adding to current zip file"
 	}
-
-	$ZipFile = (new-object -com shell.application).NameSpace($zipname) 
+	
+	#  The NameSpace method needs a FQ path to work
+	$zipname = $zipname | get-item -ErrorAction Stop
+	$shell = new-object -ComObject Shell.Application
+	$ZipFile = $shell.NameSpace($zipname.FullName)
+	#$ZipFile = (new-object -com shell.application).NameSpace($zipname) 
 }
 
 	#
@@ -1338,7 +1435,7 @@ PROCESS {
 	}
 	else
 	{
-		Write-Output "unable to create NameSpace for $zipfile"
+		Write-Output "unable to create NameSpace for $($zipname)"
 	}
 }
 
@@ -1349,18 +1446,29 @@ END {}
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+  Use the Windows Shell.Application COM object to unzip a file into a directory
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Use the Windows Shell.Application COM object to unzip a file into a directory
+
+.PARAMETER zipspec
+   Path of zip file to unzip
+
+.PARAMETER destination
+   Destination folder
+
+.PARAMETER overwrite
+   Overwrite the target file if it exists
+
 .EXAMPLE
-   <An example of using the script>
+	TBD
 #>
 function Expand-ZipFile
 {
 [CmdletBinding()]
-param($zipspec, $destination,[switch] $overwrite)
+param([Parameter(Mandatory = $true)] [string] $zipspec, 
+      [Parameter(Mandatory = $true)] [string] $destination,
+      [Parameter(Mandatory = $false)] [switch] $overwrite
+)
 
 
 if (!(Test-Path $destination))
@@ -1372,7 +1480,7 @@ $zipfile = (gci $zipspec).fullname
 
 if (!(Test-Path $zipfile))
 {
-	Write-Output "$zipfile does not exit"
+	Write-Host "$($zipfile) does not exit"
 	return
 }
 
@@ -1397,11 +1505,10 @@ foreach($item in $zip.items())
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+   Compress a series of SourceOne logfiles into a single zip file.
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+   Compress a series of SourceOne logfiles into a single zip file.
+
 .EXAMPLE
    <An example of using the script>
 #>
@@ -1414,25 +1521,24 @@ param(
 [Parameter(Mandatory=$true)]
 [string] $zipfile )
 
-$f = @(show-ES1TraceLogs $filespec )
+$f = @(Get-ES1TraceLogs $filespec )
 if ($f.count -gt 0)
 {
-	Compress-FileListToZip $zipfile $f -verbose
+	Compress-FileListToZip $zipfile $f
 }
 else
 {
-	write-output "No files found to compress"
+	Write-Host "No files found to compress"
 }
 
 }
 
 <#
 .SYNOPSIS
-   <A brief description of the script>
+    Compress all logfiles in the SourceOne JobLogs into a single zip file.
 .DESCRIPTION
-   <A detailed description of the script>
-.PARAMETER <paramName>
-   <Description of script parameter>
+    Compress all logfiles in the SourceOne JobLogs into a single zip file.
+
 .EXAMPLE
    <An example of using the script>
 #>
@@ -1440,15 +1546,13 @@ function Compress-ES1JobLogs
 {
 [CmdletBinding()]
 param(
- [Parameter(Mandatory=$true)] 
-[string] $filespec,
 [Parameter(Mandatory=$true)]
 [string] $zipfile )
 
-$f = @(show-ES1JobLogs $filespec )
+$f = @(Get-ES1JobLogs )
 if ($f.count -gt 0)
 {
-	Compress-FileListToZip $zipfile $f -verbose
+	Compress-FileListToZip $zipfile $f 
 }
 else
 {
@@ -1458,33 +1562,18 @@ else
 }
 
 
+
+
+function Show-ArchiverRoles {
 <#
 .SYNOPSIS
-   Usefull for creating new scripts from commands in an interactive session
-
-.DESCRIPTION
-   Usefull for creating new scripts from commands in an interactive session
-
-.EXAMPLE
-	Get-RecentCommands
-#>
-
-function Get-RecentCommands
-{
- # Useful for creating new scripts from commands in session
-Get-History | Select-Object commandline
-}
-
-function Show-ES1Archivers {
-	<#
-.SYNOPSIS
 	Display a list of SourceOne Archive machines and their enabled roles
 	
 .DESCRIPTION
 	Display a list of SourceOne Archive machines and their enabled roles
 	
 .EXAMPLE
-	Show-ES1Archivers
+	Show-ArchiverRoles
 
 Number of Archives: 3
 
@@ -1578,24 +1667,25 @@ SecondIPM   IPMArchive2.qagsxpdc.com          14 {Index, Query, Retrieval}
 
 <#
 .SYNOPSIS
-	Get a list of SourceOne Archive machines and their enabled roles
+	Get a list of SourceOne Archive server objects and their properties
 	
 .DESCRIPTION
-	Get a list of SourceOne Archive machines and their enabled roles
+	Get a list of SourceOne Archive server objects and their properties.  The list of objects returned contains
+	IExASServer objects with two additional properties added (ArchiveName and ArchiveRoles) for convenience.
 	
 .EXAMPLE
-	Get-ES1ArchiverInfo	
+	$arServers=Get-ES1ArchiverInfo	
+	$arServers | Select ArchiveName,ArchiveRoles,MessageCenterDir,VersionInfo | ft -AutoSize
 
-ArchiveName ServerName                RolesValue Enabled Roles
------------ ----------                ---------- -------------
-Archive1    s1Master7-J1.qagsxpdc.com         15 {Archive, Index, Query, Retrieval}
-IPMArchive  IPMWorker02.qagsxpdc.com          14 {Index, Query, Retrieval}
-SecondIPM   IPMArchive2.qagsxpdc.com          14 {Index, Query, Retrieval}
+	ArchiveName ArchiveRoles                       MessageCenterDir                        VersionInfo
+    ----------- ------------                       ----------------                        -----------
+    Archive1    {Archive, Index, Query, Retrieval} \\S1MASTER64\MsgCenter\Message_Center   7.1.3.3054
+    IPMArchive  {Index, Query, Retrieval}                                                  7.1.3.3054
+    SecondIPM   {Index, Query, Retrieval}                                                  7.1.3.3054
 
 #>
 function Get-ES1ArchiverInfo
 {
-
 	[CmdletBinding()]
 	param( )
 
@@ -1642,11 +1732,12 @@ function Get-ES1ArchiverInfo
 			foreach ($server in $Servers)
 			{
 				$roles = @()
+
+				# Decode the personality bits to something human readable
 				$personality = $server.ServerPersonality
 
 				for ($i = 0 ; $i -lt ($ASRoles.Length-1); $i++)
 				{
-
 					[int] $bits = [EMC.Interop.ExASBaseAPI.exASServerPersonalities]$ASRoles[$i]
 
 					if ($personality -band $bits)
@@ -1669,13 +1760,196 @@ function Get-ES1ArchiverInfo
 	END {}
 
 }
+<#
+.SYNOPSIS
+   Gets the SourceOne logging trace verbosity level in the Windows registry for the specified component
+   on the specified computer.  The component name is the same value as shown in the registry.
+   
+.DESCRIPTION
+   Gets the SourceOne logging trace verbosity level, logging enabled state, and number of log files to keep on disk
+   fromm the Windows registry for the specified componenton the specified computer.  The component name is the same
+   value as shown in the registry. If Component is not provided info for all component values in the registry are returned.
+   
+.PARAMETER Computer
+	Name of the computer to change the trace settings on
+.PARAMETER Component
+	Name of the component.  Should be an exact match to the value in the "TraceLogs" registry hive.
+	If not provided info for all component values in the registry are returned.
+
+.EXAMPLE
+   Get-ES1Trace -Component ES1ObjectViewer
+
+Computer       : IPMWORKER3
+Component      : ES1ObjectViewer
+TraceVerbosity : 0
+Enabled        : 1
+Splits         : 10 
+
+.EXAMPLE
+   Get-ES1Workers | foreach {$_.servername} | Get-ES1Trace | ft -AutoSize 
+   Computer                 Component                       TraceVerbosity Enabled Splits
+--------                 ---------                       -------------- ------- ------
+IPMARCHIVE2.QAGSXPDC.COM CExNotesInit                                 0       1     10
+IPMARCHIVE2.QAGSXPDC.COM CReportManager                               0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ES1AddressResolutionService.exe              0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ES1DocConverter.exe                          0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ES1InPlaceMigService.exe                     4       1     10
+IPMARCHIVE2.QAGSXPDC.COM ES1InPlaceMigValidation                      0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExAsAdmin.exe                                0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExAsArchive.exe                              0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExAsIndex.exe                                0       1     10
+IPMARCHIVE2.QAGSXPDC.COM exaslock                                     0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExAsQuery.exe                                0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExAsSrch.exe                                 0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExJBJournal.exe                              0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExJBQuery.exe                                0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExJobDispatcher.exe                          0       1     10
+IPMARCHIVE2.QAGSXPDC.COM ExJournalJBS.exe                             0       1     10
+IPMARCHIVE2.QAGSXPDC.COM System                                       0       1     10
+IPMWORKER3.QAGSXPDC.COM  CExNotesInit                                 0       1     10
+IPMWORKER3.QAGSXPDC.COM  CReportManager                               0       1     10
+IPMWORKER3.QAGSXPDC.COM  ES1AddressResolutionService.exe              0       1     10
+IPMWORKER3.QAGSXPDC.COM  ES1InPlaceMigService.exe                     0       1     10
+IPMWORKER3.QAGSXPDC.COM  ES1InPlaceMigValidation                      0       1     10
+IPMWORKER3.QAGSXPDC.COM  ES1ObjectViewer                              0       1     10
+IPMWORKER3.QAGSXPDC.COM  Ex2ES1MigrationCmd                           0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExArchiveJBC.exe                             0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExArchiveJBS.exe                             0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExJBJournal.exe                              0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExJobDispatcher.exe                          0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExJournalJBS.exe                             0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExMMCAdmin.dll                               0       1     10
+IPMWORKER3.QAGSXPDC.COM  ExNotesApi.DLL                               0       1     10
+
+#>
+function Get-ES1Trace 
+{
+[CmdletBinding()]
+PARAM([Parameter(Mandatory=$false)]
+	[string] $Component=$null,
+	[Parameter(Mandatory=$false,
+		ValueFromPipeLine=$true, 
+		ValueFromPipeLineByPropertyName=$true)]
+	[string[]]$ComputerArray =$env:COMPUTERNAME)
+	
+
+BEGIN {
+	$Results=@()
+}
+
+PROCESS {
+
+	Write-Host ""
+
+	foreach ($Computer in $ComputerArray )
+	{
+		$b = get-ES1RegBase
+		$b = $b.replace('HKLM:\','')
+		$EMCTrace = $b + "\EMC\SourceOne\Tracelogs"
+		
+		if ($Component -ne $null -and $Component.Length -gt 0)
+		{
+			$TraceLogKeys = @($Component)
+			write-verbose "Command line component name: $($TraceLogKeys)"
+		}
+		else
+		{
+			try
+			{
+				$Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $Computer)
+				if ($Reg)
+				{
+					$Key = $Reg.OpenSubKey("$EMCTrace",$true)
+					$Reg.Close()
+				}
+			}
+			catch 
+			{
+				write-error "Error accessing registry on $($Computer)"
+				return
+			}
+
+			if ($Key)
+			{
+					$TraceLogKeys = @($Key.GetSubKeyNames())
+					$Key.Close()
+					write-verbose "All subkey names: $($TraceLogKeys)"
+
+			}
+
+		}	
+
+		foreach ($TRentry in $TraceLogKeys)
+		{
+			$EMCTraceSettings = $EMCTrace + "\$TRentry\Settings"
+			write-verbose $EMCTraceSettings
+			$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
+
+			try
+			{
+				$Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $Computer)
+				if ($Reg)
+				{
+					$Key = $Reg.OpenSubKey("$EMCTraceSettings",$true)
+
+				}
+			}
+			catch 
+			{
+				write-error "Error accessing registry on $($Computer)"
+				$props = [ordered]@{'Computer'=$Computer;'Component'=$TRentry ;'TraceVerbosity'='NA';'Enabled'='NA'; 'Splits'='NA'}
+				$Results += New-object -TypeName PSObject -Prop $props
+
+				continue
+			}
+
+			if ($key -ne $null)
+			{
+				$level = $key.GetValue("TraceVerbosity")
+				$key.Close()
+
+				$FileKey = $Reg.OpenSubKey("$EMCTraceSettings\\Listeners\\File",$true)
+
+				if ($FileKey)
+				{
+					$ON = $FileKey.GetValue("Enabled")
+					$split = $FileKey.GetValue("MaxFileSplits")
+				
+					$props = [ordered]@{'Computer'=$Computer;'Component'=$TRentry ;'TraceVerbosity'=$level;'Enabled'=$ON; 'Splits'=$split}
+					$FileKey.Close()
+
+				}
+				else
+				{
+					$props = [ordered]@{'Computer'=$Computer;'Component'=$TRentry ;'TraceVerbosity'=$level;'Enabled'='NA'; 'Splits'='NA'}
+				}
+
+			}
+			else
+			{
+				$props = [ordered]@{'Computer'=$Computer;'Component'=$TRentry ;'TraceVerbosity'='NA';'Enabled'='NA'; 'Splits'='NA'}
+				write-host "Error reading Trace Setting for $component on  $($Computer)" -ForegroundColor Red
+			}
+				
+			$Results += New-object -TypeName PSObject -Prop $props
+		}
+		
+	}
+
+}  # end PROCESS
+
+END{
+	$Results
+}
+
+}
 
 
 Export-ModuleMember -Variable s1InstallDir
 Export-ModuleMember -Variable s1JobLogDir
 Export-ModuleMember -Variable s1LogDir
 Export-ModuleMember -Variable s1servers
-Export-ModuleMember -Variable s1workers
+
 Export-ModuleMember -Variable s1archivers
 Export-ModuleMember -Variable s1actdb
 Export-ModuleMember -Variable s1actServer
@@ -1686,12 +1960,13 @@ New-Alias -Name S1Dir -Value Get-ES1InstallDir
 New-Alias -Name ES1Dir -Value Get-ES1InstallDir
 New-Alias -Name S1Binaries -Value Get-ES1Executables
 New-Alias -Name Get-S1Binaries -Value Get-ES1Executables
+New-Alias -Name Get-ArchiveServers -Value Get-ES1ArchiverInfo
 New-Alias Get-S1RegBase Get-ES1RegBase
 New-Alias Get-S1RegEntry Get-ES1RegEntry
 New-Alias Get-S1RegLocation Get-ES1RegLocation
 New-Alias Get-S1InstallDir Get-ES1InstallDir
 New-Alias Get-S1JobLogDir Get-ES1JobLogDir
-New-Alias Set-S1JobLogDir Set-ES1JobLogDir
+#New-Alias Set-S1JobLogDir Set-ES1JobLogDir
 New-Alias Set-S1ActivityInfo Set-ES1ActivityInfo
 New-Alias Get-S1AgentListObjs Get-ES1AgentListObjs 
 New-Alias Get-S1AllServerInfoObjects Get-ES1AllServerInfoObjects
@@ -1704,6 +1979,6 @@ New-Alias Get-S1Servers Get-ES1Servers
 New-Alias Get-S1ServerSoftwareInfo Get-ES1ServerSoftwareInfo 
 
 New-Alias Show-S1ServerInfo Show-ES1ServerInfo
-New-Alias Get-S1ActivityObj Get-ES1ActivityObj
+New-Alias Get-ES1ActivityDB Get-ES1ActivityDatabase
 
 Export-ModuleMember -Function * -Alias *

@@ -1,11 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_ArchiveFolder.psm1
-	
-	Copyright (c) 2016 EMC Corporation.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -138,17 +135,19 @@ END {}
 }
 
 
-function Create-ES1NASArchiveFolder
+function New-ES1NASArchiveFolder
 {
 <#
 .SYNOPSIS
-	Creates a new "NAS Container" type of archive folder
+	Creates a new "NAS Container" type of archive folder.
+	Note: Parameter validation may not be identical to the SourceOne Administration GUI. 
 .DESCRIPTION
 	Creates a new "NAS Container" type of archive folder
+	Note: Parameter validation may not be identical to the SourceOne Administration GUI. 
 .OUTPUTS
 
 .EXAMPLE
-	Create-ES1NASArchiveFolder -Archivename Archive1 -FolderName 'NewFolder' -ContainerLocation '\\S1MASTER7-J1\xxx' -IndexLocation '\\S1MASTER7-J1\IndexShare'
+	New-ES1NASArchiveFolder -Archivename Archive1 -FolderName 'NewFolder' -ContainerLocation '\\S1MASTER7-J1\xxx' -IndexLocation '\\S1MASTER7-J1\IndexShare'
 #>
 [CmdletBinding()]
 PARAM( [Parameter(Mandatory=$true)]
@@ -239,18 +238,20 @@ END {}
 }
 
 
-function Create-ES1CenteraArchiveFolder
+function New-ES1CenteraArchiveFolder
 {
 <#
 .SYNOPSIS
-	Creates a new "Centera Container" type of archive folder
+	Creates a new "Centera Container" type of archive folder.
+	Note: Parameter validation may not be identical to the SourceOne Administration GUI. 
 .DESCRIPTION
 	Creates a new "Centera Container" type of archive folder
+	Note: Parameter validation may not be identical to the SourceOne Administration GUI. 
 
 .EXAMPLE
-	Create-ES1CenteraArchiveFolder -Archivename Archive1 -FolderName 'Cent1' -pool '168.159.214.11' -IndexLocation '\\S1MASTER7-J1\IndexShare'
+	New-ES1CenteraArchiveFolder -Archivename Archive1 -FolderName 'Cent1' -pool '168.159.214.11' -IndexLocation '\\S1MASTER7-J1\IndexShare'
 .EXAMPLE
-	Create-ES1CenteraArchiveFolder -Archivename Archive1 -FolderName 'Cent2' -pool '168.159.214.20;168.159.214.21;168.159.214.22' -CenteraPEAFile 'C:\temp\c2profile3.pea' -IndexLocation '\\S1MASTER7-J1\IndexShare' 
+	New-ES1CenteraArchiveFolder -Archivename Archive1 -FolderName 'Cent2' -pool '168.159.214.20;168.159.214.21;168.159.214.22' -CenteraPEAFile 'C:\temp\c2profile3.pea' -IndexLocation '\\S1MASTER7-J1\IndexShare' 
 #>
 [CmdletBinding()]
 PARAM( [Parameter(Mandatory=$true)]
@@ -634,7 +635,7 @@ END{}
 	Get a Archive folder summary information, similar to what is displayed in the MMC console
 .DESCRIPTION
   Get a Archive folder summary information, similar to what is displayed in the MMC console
-.OUTPUT
+.OUTPUTS
 
 .EXAMPLE
 
@@ -727,7 +728,7 @@ END{}
 	Get the monthly totals of an Archive folder, similar to what is displayed in the MMC console when the
 	folder is expanded.
   
-.OUTPUT
+.OUTPUTS
 
 .EXAMPLE
 

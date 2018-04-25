@@ -44,6 +44,7 @@
     <Compile Include="SourceOne_POSH\ES1_WorkerRolesUtils.psm1" />
     <Compile Include="SourceOne_POSH\ExternalUtils.psm1" />
     <Compile Include="SourceOne_POSH\folderdefaults.xml" />
+    <Compile Include="SourceOne_POSH\RemovedFunctions.psm1" />
     <Compile Include="UnitTests\ES1PowerShell.tests.ps1" />
     <Compile Include="UnitTests\ES1_Configuration.Tests.ps1" />
     <Compile Include="UnitTests\ES1_DBUtils.tests.ps1" />
@@ -59,6 +60,7 @@
     <Compile Include="SourceOne_POSH\SourceOne_POSH.psd1" />
     <Compile Include="UnitTests\ES1_Jobs.tests.ps1" />
     <Compile Include="UnitTests\ES1_Services.tests.ps1" />
+    <Compile Include="UnitTests\ES1_TraceLogging.tests.ps1" />
     <Compile Include="UnitTests\MockTests.tests.ps1" />
   </ItemGroup>
   <ItemGroup>

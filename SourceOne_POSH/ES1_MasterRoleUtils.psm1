@@ -1,12 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_MasterRoleUtils.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
-	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -126,10 +122,10 @@ function Test-IsOnS1Master
 {
 <#
 .SYNOPSIS
-Determines if running on the S1 Master machine
+Determines if running on the S1 Master machine by inspecting the Windows registry
 
 .DESCRIPTION
-Determines if running on the S1 Master machine
+Determines if running on the S1 Master machine by inspecting the Windows registry
 
 
 .EXAMPLE
@@ -143,33 +139,25 @@ begin {
 }
 
 process {
-	try
+
+	$S1RegVersions = Get-ES1RegLocation
+	if ($S1RegVersions.length -gt 0)
 	{
-		if (Test-Path -Path HKLM:\SOFTWARE\Wow6432Node\EMC\SourceOne)
-			{
-				$MasterInstalled = Get-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\EMC\SourceOne\Versions -Name "Master+" -ErrorAction SilentlyContinue
-
-			}
-			else
-			{
-				$MasterInstalled = Get-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\EMC\SourceOne\Versions -Name "Master+" -ErrorAction SilentlyContinue 
-			} 
-		}
-		catch
-		{
-			Write-Error $_
-
-		}
-
-		if ( $MasterInstalled )
-		{
-			$IsMasterMachine = $true
-		}
-
-
-		$IsMasterMachine
+		# Append the "versions" branch
+		$S1RegVersions=$S1RegVersions+'Versions'
 	}
-	end {}
+
+	$MasterInstalled = Get-ItemProperty -Path $S1RegVersions -Name "Master+" -ErrorAction SilentlyContinue
+
+	if ( $MasterInstalled )
+	{
+		$IsMasterMachine = $true
+	}
+
+	$IsMasterMachine
+}
+
+end {}
 
 
 }

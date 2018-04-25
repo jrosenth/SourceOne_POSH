@@ -75,7 +75,7 @@ AfterAll {
         $result | Should Be $true
     }
     It "displays all job logs " {
-        $list3 = @(Show-ES1JobLogs)
+        $list3 = @(Get-ES1JobLogs)
         $testResult = $false
         if ($list3.count -gt 0)
         {

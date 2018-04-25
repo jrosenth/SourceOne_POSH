@@ -1,12 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_VolumeHealth.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
-	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -28,8 +24,8 @@
   
 	Adapted from Mike Tramont's S1emVolMon.ps1 health check script
 .DESCRIPTION
-  
-.OUTPUT
+   TBD
+.OUTPUTS
 
 .EXAMPLE
 

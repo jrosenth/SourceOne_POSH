@@ -4,7 +4,7 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-Describe "Test DBUtils Cmdlets " {
+Describe "Test Cmdlets which get info from Databases or registry directly" {
 	AfterAll {
 		# return to the state before tests were run
 		if ((Get-Module -Name "SourceOne_POSH"))
@@ -27,7 +27,7 @@ Describe "Test DBUtils Cmdlets " {
 		}
 
 		It "Return the Activity DB and Activity SQL server names" {
-				$actDB =  Get-ES1ActivityDatabase
+				$actDB =  @(Get-ES1ActivityDatabase)
 
 				$actDB.Length | Should be 1
 				$actDB.DBServer | Should Not BeNullOrEmpty

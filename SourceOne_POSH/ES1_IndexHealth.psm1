@@ -1,12 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_IndexHealth.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
-	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -28,7 +24,7 @@
   
 .DESCRIPTION
   
-.OUTPUT
+.OUTPUTS
 
 .EXAMPLE
 
@@ -433,7 +429,7 @@ END {}
 	Get info from the Index Share passed in.
 	Derived from Kenta's S1 dashboard scripts
 	WORK IN PROGRESS
-.OUTPUT
+.OUTPUTS
 
 .EXAMPLE
 

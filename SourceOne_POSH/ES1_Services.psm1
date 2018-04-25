@@ -1,11 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal, msehovich
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_Services.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -26,7 +23,7 @@ $SvcStop = 3
 $svcRestart = 4
 $svcPause = 5
 $svcResume = 6
-$WaitTime = '00:00:10'
+$WaitTime = '00:00:30'
 $WaitSeconds = 50
 
 
@@ -324,7 +321,7 @@ select-object MachineName,DisplayName,Name,Status | Format-Table -AutoSize #| Ou
 
 <#
 .SYNOPSIS
-   Manage-ES1Services
+   Update-ES1Services
 .DESCRIPTION
    Guts of (almost) all the SourceOne service functions
  .PARAMETER Computername
@@ -334,9 +331,9 @@ select-object MachineName,DisplayName,Name,Status | Format-Table -AutoSize #| Ou
   2 to start services
   3 to stop services
 .EXAMPLE
-	Manage-ES1Services
+	Update-ES1Services
 #>
-function Manage-ES1Services
+function Update-ES1Services
 {
  [CmdletBinding()]
 param
@@ -490,7 +487,7 @@ function Start-ES1Services
 	$Credential = $remCreds,
 	$Wait = $true
 )
-$s = manage-ES1Services -ComputerName $ComputerName -action $SvcStart -Credential $Credential -wait $Wait
+$s = Update-ES1Services -ComputerName $ComputerName -action $SvcStart -Credential $Credential -wait $Wait
 
 Show-ES1Services $ComputerName
 
@@ -522,8 +519,8 @@ function Restart-ES1Services
 	$Wait = $true
 
 )
-$s = manage-es1Services -ComputerName $ComputerName -action $SvcStop -Credential $Credential -wait $true
-$s = manage-es1Services -ComputerName $ComputerName -action $SvcStart -Credential $Credential -wait $Wait
+$s = Update-es1Services -ComputerName $ComputerName -action $SvcStop -Credential $Credential -wait $true
+$s = Update-es1Services -ComputerName $ComputerName -action $SvcStart -Credential $Credential -wait $Wait
 
 Show-ES1Services $ComputerName
 
@@ -564,7 +561,7 @@ param
 	$Wait = $true
 
 )
-$s = manage-es1Services -ComputerName $ComputerName -action $SvcPause -Credential $Credential -wait $Wait
+$s = Update-es1Services -ComputerName $ComputerName -action $SvcPause -Credential $Credential -wait $Wait
 
 Show-es1Services $ComputerName
 
@@ -596,7 +593,7 @@ param
 
 )
 
-$s = Manage-ES1Services -ComputerName $ComputerName -action $SvcResume -Credential $Credential -wait $Wait
+$s = Update-ES1Services -ComputerName $ComputerName -action $SvcResume -Credential $Credential -wait $Wait
 Show-es1Services $ComputerName
 
 }
@@ -644,7 +641,7 @@ $Wait = $true
     }
 
 
-    $s = Manage-ES1Services -ComputerName $ComputerName -action $SvcStop -Credential $Credential -wait $wait
+    $s = Update-ES1Services -ComputerName $ComputerName -action $SvcStop -Credential $Credential -wait $wait
 
 Show-es1Services $ComputerName
 
@@ -833,11 +830,11 @@ param
 		ValueFromPipeLine=$true, 
 		ValueFromPipeLineByPropertyName=$true)]
 	[string[]]$ComputerName = $env:computername,
-    $s1acct = $env:USERNAME,
+    [string]$s1acct = $env:USERNAME,
     [Parameter(Mandatory=$true, HelpMessage='Enter the Service Account Password')]
     [ValidateNotNullOrEmpty()]
     [System.Security.SecureString] $Password,
-    $timeout = 10,
+    [int]$timeout = 10,
 	$Credential = $remCreds
 )
 
@@ -896,7 +893,10 @@ param
             Write-Progress -id 2 -parentId 1 -Activity "Updating Service Passwords on $($computer)" -Status "Number of Services: $svcCount " -percentcomplete (($j/$svcCount)*100) -Currentoperation "Service : $($svc.Name) ($dispSvcCnt)"
            
             Write-Verbose "Stopping service $($svc.name) on server $($svc.systemname) " 
-
+			#
+			# This whole stop start process does NOT take into account the current state of the service
+			#    If the services is already stopped, it will blindly be started below.  Maybe thats not a good
+			#    thing (??)
             if ($depends.Count -gt 0)
             {
                 foreach ($depSvc in $depends)
@@ -931,8 +931,7 @@ param
                 write-error "Server: $($svc.systemname) Password change FAILED for service $($svc.name), Error Code=$($changeStatus.ReturnValue)"
                 $MachineResults.ChangeStatus=$changeStatus.ReturnValue
             }
-
-            
+        
 
             Write-Verbose "starting service $($svc.name) on $($svc.systemname) "                                                                                                                                                                      
             $ret = $svc.StartService()
@@ -988,9 +987,9 @@ function Update-AllS1ServicesAccountInfo
 	The number of seconds to wait for services to stop or start.  The default is 10 seconds
 .PARAMETER <Credential> 
 (UNUSED)
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
-
+Specifies a user account that has permission to perform this action. The default is the current user. 
+Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, 
+such as an object that is returned by the Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 
 .EXAMPLE
 #>
@@ -1002,9 +1001,8 @@ param
 	[Parameter(
 		ValueFromPipeLine=$true, 
 		ValueFromPipeLineByPropertyName=$true)]
-	
-    $s1acct = $env:USERNAME,
-    $timeout = 10,
+    [string]$s1acct = $env:USERNAME,
+    [int]$timeout = 10,
 	$Credential = $remCreds
 )
 
@@ -1087,14 +1085,14 @@ function WaitForService ([string] $svc,[string] $command,[int] $secs,[string]$Se
 function Test-S1ServiceExists ([string] $svc,$Server = $env:COMPUTERNAME)
 <#
 .SYNOPSIS
-
+	Test if a specific service present on the specified computer
 .DESCRIPTION
-
+	Test if a specific service present on the specified computer
 
 .PARAMETER 
 
-
 .EXAMPLE
+	TBD
 #>
 {
 	$x = get-service $svc -computername $server -ErrorAction SilentlyContinue

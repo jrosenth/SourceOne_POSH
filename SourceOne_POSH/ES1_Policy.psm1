@@ -1,10 +1,9 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_Policy.psm1
- 	 Copyright (c) 2015 EMC Corporation.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
+	===========================================================================
 
     THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
     WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -25,6 +24,9 @@ function Pause-ES1Policies {
 	Pause all active SourceOne Policies
 .DESCRIPTION
 	Pause all active SourceOne Policies
+.NOTES
+    This function name does not follow Powershell verb naming conventions.  However for consistency with the 
+	SourceOne MMC menu item it uses the verb "Pause" instead of "Suspend"
 	
 .EXAMPLE
 	Pause-ES1Policies
@@ -80,11 +82,11 @@ PROCESS {
           #Save the policy
           $policy.Save()
 
-      }
-	  else
-	  {
-	  Write-Warning 'Policy is not in a state that can be suspended !'
-	  }
+		}
+		else
+		{
+			Write-Warning "Policy ""$($policy.name)"" is not in a state that can be suspended !"
+		}
 
      }
  }
@@ -254,7 +256,10 @@ function Pause-ES1Activities {
 	Pauses all SourceOne Activities with the specified type ID
 .DESCRIPTION
 	Pauses all SourceOne Activities with the specified type ID
-	
+.NOTES
+    This function name does not follow PowerShell verb naming conventions.  However for consistency with the 
+	SourceOne MMC menu item it uses the verb "Pause" instead of "Suspend"
+		
 .EXAMPLE
 	Pause-ES1Activities 12
 
@@ -549,6 +554,88 @@ PROCESS {
 END {}
 
 }
+
+Function Get-ES1Activities {
+<#
+.SYNOPSIS
+	Gets a list of all the configured SourceOne activities
+	
+.DESCRIPTION
+	Gets a list of all the configured SourceOne activities
+	
+.EXAMPLE
+
+
+#>
+[CmdletBinding()]
+Param( )
+
+BEGIN {
+
+	try {
+		 [bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
+
+        if (-not $loaded )
+        {
+            Write-Error 'Error loading SourceOne Objects and Types'
+            break
+        }
+	}
+	catch
+	{
+		Write-Error $_ 
+		break
+	}
+
+}
+
+PROCESS {
+
+ try { 
+		$jdfapiMgr=new-object -comobject ExJDFAPI.CoExJDFAPIMgr.1
+    
+		$policies=@()
+		$activities=@()
+		$policies=@($jdfapiMgr.GetPolicies())
+
+		foreach ($policy in $policies)
+		{
+			$policyName=$policy.name
+			$actFilter= $jdfapiMgr.CreateNewObject([EMC.Interop.ExJDFAPI.exJDFObjectType]::exJDFObjectType_ActivityFilter)
+			$actFilter.policyID = $policy.id
+
+			$activities= @($jdfapiMgr.GetActivities($actFilter))
+            #
+            # Ad some new columns
+			$activities | Add-Member NoteProperty -Name "Policy" -Value $policyName
+			$activities | Add-Member NoteProperty -Name "TaskType" -Value ""
+
+            foreach ($act in $activities)
+            {
+                $taskString=$jdfapiMgr.GetTaskTypeByID($act.taskTypeID)
+                $act.TaskType = $taskString.Name
+            }
+
+            $AllActivities+=$activities
+
+		  [System.Runtime.Interopservices.Marshal]::ReleaseComObject($actFilter)  > $null     
+	 
+		}
+       
+			$AllActivities
+
+		 }
+		 catch 
+		 {
+			Write-Error  $_
+		 }
+
+
+}
+END {}
+
+}
+
 New-Alias  Show-S1Policies          Show-ES1Policies 
 New-Alias  Pause-S1Policies         Pause-ES1Policies
 New-Alias  Resume-S1Policies        Resume-ES1Policies

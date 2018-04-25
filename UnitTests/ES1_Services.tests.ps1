@@ -56,7 +56,7 @@ AfterAll {
             if ($Script:TotalServiceCount -eq $results.count)
             {
                 $test = $true
-                }
+             }
                         
         }
         $test | Should Be $true

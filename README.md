@@ -10,9 +10,9 @@ Requirements
 
 Description
 =========================================
-The SourceOne console (MMC) is the only supported way of configuring and managing a SourceOne implementation.
+The EMC SourceOne console (MMC) is the only supported way of configuring and managing a SourceOne implementation.
 This PowerShell module provides a means of scripting and automating SourceOne configuration and management functions without using the
-SourceOne console.
+SourceOne console application.
 
 The PowerShell module provides a wrapper around the same .NET and COM objects used by the MMC.
 
@@ -24,8 +24,11 @@ This module also require PowerShell 4.  The underlying COM objects require .NET 
 Usage
 =========================================
  * You must be logged in as or run the PowerShell instance with a user that has SourceOne administration privileges.
- * Some commands may require the shell instance to be launched using "Run as Administator".  This especially applies to command which
-   connect to and manage other machines (VMs) within the SourceOne implementation.
+ * Some commands may require the shell instance to be launched using "Run as Administator".  This especially applies to commands which
+   connect to and manage other machines (VMs) within the SourceOne implementation. Commands which manage Windows services use the 
+   "Windows Management Instrumentation (WMI)" interfaces and objects.  Managing services generally requires administrator privileges 
+   and accessing machines remotely also requires elevated privileges.  More information about WMI can be found by
+   googling "wmi and powershell".  
 
 Installation
 =========================================
@@ -47,8 +50,9 @@ One of the foundation concepts in Windows PowerShell is that you should only nee
 To find out what SourceOne cmdlets and functions are available, a convenience command "Get-ES1Commands" has been created.  Executing this cmdlet will display a list of all the public cmdlets and functions available in the SourceOne PowerShell module.
 
 If you wanted to "get-help" on all cmdlets and functions contained within the "SourceOne_POSH" module you can use the command:
-
-           Get-Command -module SourceOne_POSH | Get-Help -detail
+```powershell
+   Get-Command -module SourceOne_POSH | Get-Help -detail
+```
 
 Unit Tests
 =========================================

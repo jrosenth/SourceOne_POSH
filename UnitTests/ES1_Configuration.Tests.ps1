@@ -1,12 +1,15 @@
 ﻿$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$here = "..\SourceOne_POSH"
-$here
+#$here = "..\SourceOne_POSH"
+#$here
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
-"$here\$sut"
+#"$here\$sut"
 #. "$here\$sut"
 
+# Change to script location
+   	$scriptDirectory  = Split-Path -parent $PSCommandPath
+    Set-Location $scriptDirectory
 
-Describe "ES1 Configuration Functions" {
+Describe "Test SourceOne Configuration Functions" {
 AfterAll {
 		# return to the state before tests were run
 		if ((Get-Module -Name "SourceOne_POSH"))
@@ -19,8 +22,18 @@ AfterAll {
 		# return to the state before tests were run
 		import-module SourceOne_POSH -DisableNameChecking -Force
         $local = hostname
-        $configFile = "$local-Test-Settings.xml"
-        [xml]$config = gc $configFile
+		#
+		# load known configruation information for testing responses
+		#
+        #$configFile = "$local-Test-Settings.xml"
+		$configFile = $scriptDirectory + "\SourceOneBaseline.xml"
+		$config = New-Object -TypeName XML
+		$config.Load($configFile)
+
+        #[xml]$config = gc $configFile
+		$wrkCnt = $config.selectNodes("//TestData/WorkerMachines/Worker").Count
+		$archiverCnt = $config.selectNodes("//TestData/ArchiveMachines/Archiver").Count
+
         $remoting = $config.settings.remoting
         if ($remoting -eq 'no')
         {    
@@ -30,13 +43,13 @@ AfterAll {
         {
            $notremoting = $false
         }
-        $archive1
+  #      $archive1
 
 	}
-    It "Get-ES1ActivityObj" {
+    It "Get-ES1ActivityDB" {
         $test = $false
-        $results = Get-ES1ActivityObj
-        if (($results.activitydb.length -gt 0) -and ($results.activityserver.length -gt 0))
+        $results = @(Get-ES1ActivityDB)
+        if (($results.DBName.length -gt 0) -and ($results.DBServer.length -gt 0))
         {
             if (($s1Actdb -gt 0) -and ($s1ActServer -gt 0))
             {
@@ -49,23 +62,26 @@ AfterAll {
     }
     It "Get-S1Workers" {
         $test = $false
-        $results = Get-S1Workers
-        if (($results.servername.length -gt 0) -and ($results.workerid -gt 0))
+        $results = @(Get-S1Workers)
+
+		# Check both the local return value and session global variable too        
+		if (($results.Count -eq $wrkCnt ) -and ($s1Workers.Count -eq $wrkCnt))
         {
-            if ($s1Workers.Count -gt 0)
-            {
-            $test = $true
-            }
+			$test = $true
         }
+        
         $test | Should Be $true
     }
     It "Get-S1Archivers" {
         $test = $false
         $results = Get-S1Archivers
-        if ($results.count -gt 0)
+
+		# Check both the local return value and session global variable too        
+		if (($results.Count -eq $archiverCnt ) -and ($s1Archivers.Count -eq $archiverCnt))
         {
-            $test = $true
+			$test = $true
         }
+
         $test | Should Be $true
     }
 

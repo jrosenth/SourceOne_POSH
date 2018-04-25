@@ -1,12 +1,9 @@
 ﻿<#	
 	.NOTES
 	===========================================================================
-	 Created on:   	
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1POSH_HelperUtils.ps1
-	===========================================================================
-	
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
+	===========================================================================	
     THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
     WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
  	WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
@@ -241,7 +238,8 @@ function Test-PsRemoting
 Verify Active Directory credentials
 
 .DESCRIPTION
-This function takes a user name and a password as input and will verify if the combination is correct. The function returns a boolean based on the result.
+This function takes a user name and a password as input and will verify if the combination is correct. 
+The function returns a boolean based on the result.
 
 .NOTES   
 Name: Test-ADCredential
@@ -284,7 +282,7 @@ function Test-ADCredential {
 .DESCRIPTION
     Helper wrapper around Powershell Send-MailMessage cmdlet
   
-.OUTPUT
+.OUTPUTS
 
 .EXAMPLE
 
@@ -457,6 +455,22 @@ END {}
 
 }
 
+<#
+.SYNOPSIS
+   Usefull for creating new scripts from commands in an interactive session
+
+.DESCRIPTION
+   Usefull for creating new scripts from commands in an interactive session
+
+.EXAMPLE
+	Get-RecentCommands
+#>
+
+function Get-RecentCommands
+{
+ # Useful for creating new scripts from commands in session
+Get-History | Select-Object commandline
+}
 
 #
 #   Public Exports

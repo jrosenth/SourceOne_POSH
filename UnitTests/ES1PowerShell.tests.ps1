@@ -4,7 +4,7 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-Describe "SourceOne PowerShell Test Installation and Import " {
+Describe "SourceOne PowerShell Test Installation and Import-Module " {
 	AfterAll {
 		# return to the state before tests were run
 		if ((Get-Module -Name "SourceOne_POSH"))
@@ -12,8 +12,8 @@ Describe "SourceOne PowerShell Test Installation and Import " {
 			Remove-Module SourceOne_POSH
 		}
 	}
-	Context "SourceOne PowerShell basic path and import tests" {
-		It "SourceOne Powershell directory should be in module path" {
+	Context "SourceOne PowerShell basic path and import module tests" {
+		It "SourceOne Powershell directory should be in module path (if installed with msi instaler)" {
 			$modPath=$env:PSModulePath
 			$good=($modPath.Contains('SourceOne PowerShell'))
 

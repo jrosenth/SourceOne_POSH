@@ -1,11 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_Jobs.psm1
-	
-	Copyright (c) 2015 EMC Corporation.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -54,15 +51,14 @@ function Show-ES1Jobs
 {
 <#
 .SYNOPSIS
- Derived from Mike Tramont JobInfo script(s)
-Produce a table of job history an status for the requested number of days.
+ Display a table of job history and status for the requested number of days.
 
 .DESCRIPTION
-
+ Show 
 .NOTES
 Derived from Mike Tramont JobInfo script(s)
 
-.PARAMETERS Jobtype
+.PARAMETER Jobtype
 show job information for the specified "HA","FA","journal","querydc","query","FIP","SP","Shortcut","Export","restoredc"
 
 .OUTPUTS
@@ -79,29 +75,31 @@ param(
 	[switch]$failed,[switch]$failedItems)
 
 	Get-ES1JobInfo $newest $tasktypeid $jobtype $days -usedate:$usedate -failed:$failed -faileditems:$faileditems | `
-	       select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime | Format-Table -AutoSize | Out-String -Width 10000
+	       select-object Jobid,WorkerName,PolicyName,ActivityName,TaskType,Statestr,ItemsProcessed,ItemsFailed,ItemsDupd,starttime,Endtime |`
+		   Format-Table -AutoSize | Out-String -Width 10000
 
 }
 
 
 <#
 .SYNOPSIS
- Derived from Mike Tramont JobInfo script(s)
-Produce a table of job history an status for the requested number of days.
+	Get a table of job history and status for the requested number of days.
 
 .DESCRIPTION
+	Get a table of job history and status for the requested number of days.
 
-.NOTES
-Derived from Mike Tramont JobInfo script(s)
-
-.PARAMETERS days
+.PARAMETER days
 	The number of days of information to capture, default is 1 day of information
-.PARAMETERS newest
+.PARAMETER newest
 	The number of most recent job information to retreive
-.PARAMETERS Failed
+.PARAMETER failed
 	show only items with a failed State
-.PARAMETERS FailedItems
-	show only items with a FailedItemCount > 0
+.PARAMETER failedItems
+	show only items with a failedItemCount > 0
+.PARAMETER usedate
+	Use today as the start date (?)
+
+
 .OUTPUTS
 
 .EXAMPLE
@@ -111,11 +109,13 @@ function Get-ES1JobInfo
 {
 [CmdletBinding()]
 param(
-	$newest, $taskTypeid = 0,
-	[ValidateSet("HA","FA","journal","querydc","query","FIP","SP","Shortcut","Export","restoredc","")]
-	[string]$jobtype,
-	[int]$days = 0,[switch] $usedate = $false,
-	[switch]$failed,[switch]$failedItems)
+	[int]$newest, 
+	[int]$taskTypeid = 0,
+	[ValidateSet("HA","FA","journal","querydc","query","FIP","SP","Shortcut","Export","restoredc","delete","")][string]$jobtype,
+	[int]$days = 0,
+	[switch] $usedate = $false,
+	[switch]$failed,
+	[switch]$failedItems)
 
 begin{}
 process {
@@ -140,20 +140,19 @@ process {
 		"FA" { $tasktypeid = -931516946} 
 		"FIP" { $tasktypeid = -475486385}
 		"SP" { $tasktypeid = 2002108941} 
-		"shortcut" { $tasktypeid = 14} 
-		"export" { $tasktypeid = 6} 
+		"Shortcut" { $tasktypeid = 14} 
+		"Export" { $tasktypeid = 6} 
 		"restoredc" { $tasktypeid = 6} 
 		"HA" { $tasktypeid = 12} 
 	}
 
 
-
 	#-------------------------------------------------------------------------------
 	# Get Activity Database
 	#-------------------------------------------------------------------------------
-	$activityData = Get-ES1ActivityObj
-	$actDbServer = $activityData.ActivityServer
-	$actDb = $activityData.ActivityDb
+	$activityData = Get-ES1ActivityDatabase
+	$actDbServer = $activityData.DBServer
+	$actDb = $activityData.DBName
 	#
 	# Calculate Start Date
 	#
@@ -329,7 +328,7 @@ $decoded
 	Produce a table of job history for Jobs which have failed
 .DESCRIPTION
 	Show-ES1FailedJobs
-.PARAMETERS newest
+.PARAMETER newest
 The number of items to display
 
 .EXAMPLE
@@ -357,7 +356,7 @@ Get-ES1JobInfo -failed -newest $newest | `
 	Produce a table of job history for Jobs which have failed items
 .DESCRIPTION
 	Show-ES1JobsWithFailedItems
-.PARAMETERS newest
+.PARAMETER newest
 	The number of items to display
 
 .EXAMPLE
@@ -485,12 +484,14 @@ function Find-inES1JobLogs
 
 <#
 .SYNOPSIS
-	TBD	
+   Gets a list files in the SourceOne Jobs log directory
 .DESCRIPTION
-	TBD - 
- #>
+   Gets a list files in the SourceOne Jobs log directory
 
-function Show-ES1JobLogs
+.EXAMPLE
+   <An example of using the script>
+#>
+function Get-ES1JobLogs
 {
 [CmdletBinding()]
 	param ()
@@ -508,7 +509,7 @@ New-Alias Show-S1JobInfo Show-ES1Jobs
 New-Alias Show-S1FailedJobs Show-ES1FailedJobs
 New-Alias S1Jobs Show-ES1JobInfo
 New-Alias S1FailedJobs Show-ES1FailedJobs
-New-Alias Show-S1JobLogs Show-ES1JobLogs
+New-Alias Get-S1JobLogs Get-ES1JobLogs
 New-Alias Find-inS1JobLogs Find-inES1JobLogs
 
 

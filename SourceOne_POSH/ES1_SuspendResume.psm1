@@ -1,12 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_SuspendResume.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
-	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -23,7 +19,7 @@
 #requires -Version 4
 
 #
-#  Archvie Server state enums for reference:
+#  Archive Server state enums for reference:
 #			 
 # EMC.Interop.ExASBaseAPI.exAServerStates           exAServerAvailable               1
 # EMC.Interop.ExASBaseAPI.exAServerStates           exAServerSuspendingForBackup     2

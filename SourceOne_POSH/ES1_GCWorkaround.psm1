@@ -1,10 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created on:   	
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp. Professional Services
-	 Filename:     	ES1_GCWorkaround.psm1
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
     THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
     WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED

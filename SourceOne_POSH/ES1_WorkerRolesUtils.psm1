@@ -1,12 +1,8 @@
 <#	
 	.NOTES
 	===========================================================================
-	 Created by:   	jrosenthal
-	 Organization: 	EMC Corp.
-	 Filename:     	ES1_WorkerRoleUtils.psm1
-	
-	Copyright (c) 2015-2016 EMC Corporation.  All rights reserved.
-	Copyright (c) 2015-2017 Dell Technologies.  All rights reserved.
+
+	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
@@ -616,13 +612,16 @@ function Get-ES1WorkerNameFromID
 	$name
 }
 
+# Exported, "global" module scope. Once set we wont get it again unless forced
+$s1Workers = @()
+
 
 <#
 .SYNOPSIS
    Get-ES1Workers
 .DESCRIPTION
    Retrieve the names of all SourceOne workers from SQL
-.OUTPUT
+.OUTPUTS
 Sets Session array $s1Workers
 .EXAMPLE
    Get-ES1Workers
@@ -630,14 +629,11 @@ Sets Session array $s1Workers
    Master.domain.com
    Worker.domain.com
 #>
-#-------------------------------------------------------------------------------
-# Function:  Get-ES1Workers
-#-------------------------------------------------------------------------------
 function Get-ES1Workers
 {
  [CmdletBinding()]
 param()
-Get-ES1ActivityObj | out-null
+Get-ES1ActivityDB| out-null
 
 #
 # Define SQL Query
@@ -660,4 +656,5 @@ $dtResults
 New-Alias Get-S1WorkerNameFromID Get-ES1WorkerNameFromID
 New-Alias Get-S1Workers Get-ES1Workers
 
+Export-ModuleMember -Variable s1Workers
 Export-ModuleMember -Function * -Alias *
