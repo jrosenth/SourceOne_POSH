@@ -1,3 +1,8 @@
+
+| Branch | AppVeyor |
+| ------ | -------- |
+| master | [![Build status](https://ci.appveyor.com/api/projects/status/uf208r8tekr89amq?svg=true)](https://ci.appveyor.com/project/jrosenth/sourceone-posh)
+
 EMC SourceOne PowerShell Module
 =========================================
 This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
