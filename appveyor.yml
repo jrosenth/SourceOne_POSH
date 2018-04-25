@@ -1,11 +1,19 @@
-version: 2.0.{build}
+version: 4.0.0.{build}
+
+image: Visual Studio 2013
+
 nuget:
   account_feed: true
   project_feed: true
-configuration:
-  - Release
+
+platform:
+  - x86
+  - Any CPU
+
+configuration: Release
+
 build:
   project: ES1PowerShell.sln
-  parallel: true
+  parallel: false
   verbosity: minimal
   
