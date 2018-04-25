@@ -98,15 +98,12 @@ LC Outside                30         2422             160      30        2422   
 2 Year                     4           20               0       4          26              0      1 Archive1
 Archive                   45         1907             130      40        1907             47      0 Archive1
 Cen2NAS                   32         2422             134      30        2422             51      0 Archive1
-CopyTest                   0            0               0       0           0              0      0 Archive1
 Centera_LCOUT             33         2438              65      33        2438             51      0 Archive1
 Cent2                     21          999              32      21         999             35      0 Archive1
 AtmosNoRetention          40         1907              50      40        1907             34      0 Archive1
 CentWithRet               34         2440              73      34        2440             50      0 Archive1
 Mikes Atmos                0            0               0       0           0              0      0 Archive1
-DemoCent2NAS              37         1593              49      34        1713             43     37 Archive1
 Xtender1                  40         2018             219      43        6004             75      0 IPMArchive
-BHP                        1          563              99       1         563              6      0 IPMArchive
 SecondIPMFolder            2         6002              56       1        6002             86      0 SecondIPM
 ```
 
