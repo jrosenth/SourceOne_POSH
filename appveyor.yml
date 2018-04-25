@@ -6,10 +6,6 @@ nuget:
   account_feed: true
   project_feed: true
 
-platform:
-  - x86
-  - Any CPU
-
 configuration: Release
 
 build:
