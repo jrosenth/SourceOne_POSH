@@ -19,8 +19,8 @@ build:
   verbosity: minimal
 
 artifacts:
-  - path: Release\en-us
-    name: ES1PowerShellInstall.msi
+  - path: Release\en-us\ES1PowerShellInstall.msi
+    name: ES1POSHInstaller
 
 deploy:  
   - provider: FTP
