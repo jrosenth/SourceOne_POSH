@@ -26,8 +26,8 @@ on_success:
   - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
   - git config --global user.email "jrosenth@comcast.net"
   - git config --global user.name "Jay R."
-  - git commit SourceOne_POSH\SourceOne_POSH.psd1 -m "AppVeyor Build {build}"
-  - git push
+  - git commit SourceOne_POSH\SourceOne_POSH.psd1 -m "AppVeyor Build"
+  - git push origin master
   
 environment:
   access_token:
