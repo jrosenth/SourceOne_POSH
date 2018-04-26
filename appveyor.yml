@@ -31,7 +31,9 @@ deploy:
     folder: SourceOne PowerShell
   
   - provider: GitHub
-    artifact: ES1POSHInstaller        
+    artifact: ES1POSHInstaller  
+    auth_token:
+     secure:$($env:access_token)
     draft: false
     prerelease: false
     on:
