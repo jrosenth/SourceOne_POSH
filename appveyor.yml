@@ -20,7 +20,15 @@ build:
 
 artifacts:
   - path: Release\en-us\ES1PowerShellInstall.msi
-  
+
+deploy:  
+  - provider: FTP
+  - protocol: ftps
+  - host: ftp.emc.com
+  - username: rosenj4
+  - password: B4QLQDAoII
+  - folder: SourceOne PowerShell
+ 
 on_success:
   - git config --global credential.helper store
   - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
