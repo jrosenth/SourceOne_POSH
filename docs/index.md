@@ -1,5 +1,6 @@
 
-EMC SourceOne PowerShell Module               [![License](http://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)=========================================
+EMC SourceOne PowerShell Module               [![License](http://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
+=========================================
 This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
 
 Requirements
