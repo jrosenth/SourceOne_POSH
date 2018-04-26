@@ -30,6 +30,7 @@ deploy:
     host: ftp.emc.com
     username: rosenj4
     password: B4QLQDAoII
+    artifact: ES1POSHInstaller
     folder: SourceOne PowerShell
   
   - provider: GitHub
