@@ -23,11 +23,11 @@ artifacts:
 
 deploy:  
   - provider: FTP
-  - protocol: ftps
-  - host: ftp.emc.com
-  - username: rosenj4
-  - password: B4QLQDAoII
-  - folder: SourceOne PowerShell
+    protocol: ftp
+    host: ftp.emc.com
+    username: rosenj4
+    password: B4QLQDAoII
+    folder: SourceOne PowerShell
  
 on_success:
   - git config --global credential.helper store
