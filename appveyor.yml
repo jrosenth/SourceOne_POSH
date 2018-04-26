@@ -33,9 +33,9 @@ deploy:
   - provider: GitHub
     artifact: ES1POSHInstaller  
     auth_token:
-     secure:$($env:access_token)
+     secure: $env:access_token
     draft: false
-    prerelease: false
+    prerelease: true
     on:
       branch: master                # release from master branch only
       #appveyor_repo_tag: true       # deploy on tag push only
