@@ -20,7 +20,16 @@ build:
 
 artifacts:
   - path: Release\en-us\ES1PowerShellInstall.msi
-
+  
 on_success:
+  - git config --global credential.helper store
+  - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+  - git config --global user.email "jrosenth@comcast.net"
+  - git config --global user.name "Jay R."
   - git commit SourceOne_POSH\SourceOne_POSH.psd1
   - git push
+  
+environment:
+  access_token:
+    secure: eM9AE60GLNzpltXgt+FT8ur+h89SjtWRaJPPClF2h2ztYarbzcvj8rk1wY7kvpJ8
+    
