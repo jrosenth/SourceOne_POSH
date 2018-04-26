@@ -1,7 +1,7 @@
 
 | Branch | AppVeyor |
 | ------ | -------- |
-| master | [![Build status](https://ci.appveyor.com/api/projects/status/uf208r8tekr89amq?svg=true)](https://ci.appveyor.com/project/jrosenth/sourceone-posh)
+| master | [![Build status](https://ci.appveyor.com/api/projects/status/kx3pjj7o02myqx9a?svg=true)](https://ci.appveyor.com/project/jrosenth/sourceone-posh)
 
 EMC SourceOne PowerShell Module
 =========================================
