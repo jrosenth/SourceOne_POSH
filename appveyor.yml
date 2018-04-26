@@ -27,7 +27,7 @@ on_success:
   - git config --global user.email "jrosenth@comcast.net"
   - git config --global user.name "Jay R."
   - git commit SourceOne_POSH\SourceOne_POSH.psd1 -m "AppVeyor Build"
-  - git push origin master
+  - git push origin HEAD
   
 environment:
   access_token:
