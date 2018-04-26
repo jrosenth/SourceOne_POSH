@@ -33,7 +33,7 @@ deploy:
   - provider: GitHub
     artifact: ES1POSHInstaller  
     auth_token:
-     secure: $env:access_token
+     secure: eM9AE60GLNzpltXgt+FT8ur+h89SjtWRaJPPClF2h2ztYarbzcvj8rk1wY7kvpJ8
     draft: false
     prerelease: true
     on:
