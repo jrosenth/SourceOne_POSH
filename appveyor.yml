@@ -22,5 +22,5 @@ artifacts:
   - path: Release\en-us\ES1PowerShellInstall.msi
 
 on_success:
-  - git commit SourceOne_POSH\SourceOne_POSH\SourceOne_POSH.psd1
+  - git commit SourceOne_POSH\SourceOne_POSH.psd1
   - git push
