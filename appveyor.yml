@@ -13,6 +13,8 @@ nuget:
 
 configuration: Release
 
+skip_tags: true
+
 build:
   project: ES1PowerShell.sln
   parallel: false
