@@ -1,5 +1,6 @@
 
-EMC SourceOne PowerShell Module                           Â [![License](http://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)=========================================This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
+EMC SourceOne PowerShell Module      [![License](http://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)=========================================
+This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
 Requirements========================================  * EMC SourceOne Version 7.1.3 or greater  * PowerShell 4 or greater  * .NET 4 or greater
 Description=========================================The EMC SourceOne console (MMC) is the only supported way of configuring and managing a SourceOne implementation.This PowerShell module provides a means of scripting and automating SourceOne configuration and management functions without using theSourceOne console application.
 The PowerShell module provides a wrapper around the same .NET and COM objects used by the MMC.
