@@ -31,6 +31,8 @@ deploy:
     folder: SourceOne PowerShell
   
   - provider: GitHub
+    tag: v$(appveyor_build_version)
+    release: EMC SourceOne PowerShell v$(appveyor_build_version)
     artifact: ES1POSHInstaller  
     auth_token:
      secure: eM9AE60GLNzpltXgt+FT8ur+h89SjtWRaJPPClF2h2ztYarbzcvj8rk1wY7kvpJ8
@@ -38,7 +40,7 @@ deploy:
     prerelease: true
     on:
       branch: master                # release from master branch only
-      #appveyor_repo_tag: true       # deploy on tag push only
+      appveyor_repo_tag: true       # deploy on tag push only
  
 on_success:
   - git config --global credential.helper store
