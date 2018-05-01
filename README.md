@@ -70,7 +70,7 @@ Create a fork of the project into your own reposity. Make all your necessary cha
 
 Licensing
 ========================================
-SourceOne PowerShell is freely distributed under the <a href="http://emccode.github.io/sampledocs/LICENSE">MIT License</a>. See LICENSE for details.
+SourceOne PowerShell is freely distributed under the <a href="http://emccode.github.io/sampledocs/LICENSE">Apache 2.0 License</a>. See LICENSE for details.
 
 NOTE: Some included utility and helper functions are licensed under the MICROSOFT LIMITED PUBLIC LICENSE.
 
