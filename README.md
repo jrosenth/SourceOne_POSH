@@ -3,7 +3,7 @@
 | ------ | -------- |
 | master | [![Build status](https://ci.appveyor.com/api/projects/status/kx3pjj7o02myqx9a?svg=true)](https://ci.appveyor.com/project/jrosenth/sourceone-posh)
 
-EMC SourceOne PowerShell Module                            [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)(https://opensource.org/licenses/Apache-2.0)]
+EMC SourceOne PowerShell Module                  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 =========================================
 This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
 
