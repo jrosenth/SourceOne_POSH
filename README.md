@@ -7,7 +7,7 @@ EMC SourceOne PowerShell Module                  [![License](https://im
 =========================================
 This project contains a Powershell module for managing and automating the configuration of an EMC SourceOne environment.
 
-Latest Release   [![Release](http://github-release-version.herokuapp.com/github/allure-framework/allure-core/release.svg?style=flat)](https://github.com/jrosenth/SourceOne_POSH/releases/latest)
+Latest Release     [![GitHub release](https://img.shields.io/github/release/qubyte/rubidium.svg)](https://github.com/jrosenth/SourceOne_POSH/releases/latest)
 ========================================
 
 Requirements
