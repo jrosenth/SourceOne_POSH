@@ -1,8 +1,13 @@
 <#	
 	.NOTES
 	===========================================================================
+	 
+	Copyright © 2018 Dell Inc. or its subsidiaries. All Rights Reserved.
 
-	Copyright (c) 2015-2018 Dell Technologies, Dell EMC.  All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+	       http://www.apache.org/licenses/LICENSE-2.0
 	===========================================================================
 	THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
 	WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED

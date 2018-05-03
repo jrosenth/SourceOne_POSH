@@ -1,4 +1,19 @@
-$global:IPMPromptSettings = New-Object PSObject -Property @{
+#	 
+#	Copyright © 2018 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#	       http://www.apache.org/licenses/LICENSE-2.0
+#  
+# THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+# WHETHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+# IF THIS CODE AND INFORMATION IS MODIFIED, THE ENTIRE RISK OF USE OR RESULTS IN
+# CONNECTION WITH THE USE OF THIS CODE AND INFORMATION REMAINS WITH THE USER. 
+#
+
+$global:ES1PromptSettings = New-Object PSObject -Property @{
     DefaultForegroundColor    = $Host.UI.RawUI.ForegroundColor
 
     BeforeText                = ' ['
@@ -26,7 +41,7 @@ $productName = "EMC SourceOne Powershell"
 $productShortName = "SourceOne-"
 $version = "xx.xx.xx.xx"
 $windowTitle = "EMC SourceOne Powershell"
-$host.ui.RawUI.WindowTitle = $IPMPromptSettings.EnableWindowTitle
+$host.ui.RawUI.WindowTitle = $ES1PromptSettings.EnableWindowTitle
 $Host.UI.RawUI.ForegroundColor = "white"
 $Host.UI.RawUI.BackgroundColor = "DarkBlue"
 

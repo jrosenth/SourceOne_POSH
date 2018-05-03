@@ -31,6 +31,7 @@
     <!-- WixVariable Id="WixUIDialogBmp" Value="Images/PSRedefine2.bmp" / -->
     <WixVariable Id="WixUIDialogBmp" Value="Images/SDSAmericas_2017.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="Images/DellEMC_2017.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SolutionDir)\LICENSE.rtf" />
     <Icon Id="icon.ico" SourceFile="Images\es1poshshortcut.ico"/>
     <Icon Id="shortcutIcon.exe" SourceFile="$(var.SolutionDir)\$(var.Configuration)\ShortcutIcon.exe"/>
     <Property Id="ARPPRODUCTICON" Value="icon.ico" />
@@ -63,8 +64,10 @@
       
       <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
       <!-- To enable standard look and feel , enable the line below -->
-      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="2"></Publish >
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg" Order="2"></Publish >
       <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2"></Publish >
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="2"></Publish >
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2"></Publish >
 
     </UI>
     <UIRef Id="WixUI_Common" />

@@ -2,11 +2,11 @@
 <WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
   
 	<String Id="YOURLOCID">Your localized string</String>
-  <String Id="ManufacturerName">EMC Corporation</String>
+  <String Id="ManufacturerName">Dell Inc.</String>
   <String Id="ApplicationName">EMC SourceOne PowerShell</String>
   <String Id="WelcomeHeaderText">EMC SourceOne Powershell Setup [ProductVersion]</String>
   <String Id="WelcomeDlgTitle">{\WixUI_Font_Title}Welcome to EMC SourceOne Powershell Modules Install [ProductVersion]</String>
-  <String Id="WelcomeDlgDescription">The SourceOne PowerShell modules provide access to many functions via an intelligent command line without using the SourceOne Console.  These utilities are supported by Professional Services.</String>
+  <String Id="WelcomeDlgDescription">The SourceOne PowerShell modules provide access to many functions via an intelligent command line without using the SourceOne Console.  These modules are licensed under the Apache License 2.0 </String>
   <String Id="WelcomeDlgContinue"> Click Proceed to continue installation or Cancel to exit.</String>
   
   <String Id="IntroText">Intro Text</String>
