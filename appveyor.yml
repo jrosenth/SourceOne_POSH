@@ -24,15 +24,7 @@ artifacts:
   - path: Release\en-us\ES1PowerShellInstall.msi
     name: ES1POSHInstaller
 
-deploy:  
-  - provider: FTP
-    protocol: ftp
-    host: ftp.emc.com
-    username: rosenj4
-    password: B4QLQDAoII
-    artifact: ES1POSHInstaller
-    folder: SourceOne PowerShell
-  
+deploy:   
   - provider: GitHub
     tag: v$(appveyor_build_version)
     release: EMC SourceOne PowerShell v$(appveyor_build_version)
