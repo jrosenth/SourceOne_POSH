@@ -107,7 +107,7 @@ Xtender1                  40         2018             219      43        6004   
 SecondIPMFolder            2         6002              56       1        6002             86      0 SecondIPM
 ```
 
-#####Get archive folder monthly info similar to that displayed in the management console when an archive folder is expanded.
+##### Get archive folder monthly info similar to that displayed in the management console when an archive folder is expanded.
 
 
 ```powershell
