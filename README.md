@@ -1,7 +1,7 @@
 
 | Branch | AppVeyor | Latest Release|
 | ------ | -------- | ------------- |
-| master | [![Build status](https://ci.appveyor.com/api/projects/status/kx3pjj7o02myqx9a?svg=true)](https://ci.appveyor.com/project/jrosenth/sourceone-posh)|  [![GitHub release](https://img.shields.io/github/release/jrosenth/SourceOne_POSH.svg)](https://github.com/jrosenth/SourceOne_POSH/relelases/latest)
+| master | [![Build status](https://ci.appveyor.com/api/projects/status/kx3pjj7o02myqx9a?svg=true)](https://ci.appveyor.com/project/jrosenth/sourceone-posh)|  [![GitHub release](https://img.shields.io/github/release/jrosenth/SourceOne_POSH.svg)](https://github.com/jrosenth/SourceOne_POSH/releases/latest)
 
 EMC SourceOne PowerShell Module                  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 =========================================
