@@ -55,7 +55,7 @@ function Get-POSHVersionAndArchitecture{
 	param ()
 	
 	#$POSH = "{0}, {1}"
-	$POSHVer = Get-Host | Select Version
+	$POSHVer = Get-Host | Select-Object Version
 	
 	$Arch = (Get-Process -Id $PID).StartInfo.EnvironmentVariables["PROCESSOR_ARCHITECTURE"];
 	if ($Arch -eq 'x86')
@@ -170,6 +170,7 @@ Description
 -----------       
 Command will check the current user to see if an Administrator. 
 #>  
+	[OutputType('System.Boolean')]
     [cmdletbinding()]  
     Param()  
       
@@ -269,14 +270,18 @@ function Test-ADCredential {
     Param
     (
         [string]$UserName,
-        [string]$Password
+        [System.Security.SecureString]$Password
     )
     if (!($UserName) -or !($Password)) {
         Write-Warning 'Test-ADCredential: Please specify both user name and password'
     } else {
+
+		$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)                                                                                                       
+		$s1pw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) 
+
         Add-Type -AssemblyName System.DirectoryServices.AccountManagement
         $DS = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('domain')
-        $DS.ValidateCredentials($UserName, $Password)
+        $DS.ValidateCredentials($UserName, $s1pw)
     }
 }
 
@@ -293,6 +298,7 @@ function Test-ADCredential {
 
 #>
 function Send-Email {
+  [OutputType('System.Boolean')]
   [CmdletBinding()]
     Param
     (

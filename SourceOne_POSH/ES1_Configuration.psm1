@@ -47,11 +47,7 @@ process {
 	#-------------------------------------------------------------------------------
 	# Get Activity Database
 	#-------------------------------------------------------------------------------
-
-
 	Get-ES1ActivityDB | out-null
-	$actDbServer = $Script:s1ActServer
-	$actDb = $Script:S1Actdb
 
 	#-------------------------------------------------------------------------------
 	# Get List of SourceOne Servers
@@ -60,9 +56,6 @@ process {
 	$cServers += $scriptComputerName
 
 	# Get SourceOne Worker Servers
-	$dbName = $actDb
-	$dbServer = $actDbServer
-
 	$dtResults = Get-ES1Workers 
 	foreach ($row in $dtResults)
 	{
@@ -180,8 +173,6 @@ process {
 	#-------------------------------------------------------------------------------
 
 	Get-ES1ActivityDB | out-null
-	$actDbServer = $Script:s1ActServer
-	$actDb = $Script:S1Actdb
 
 	#-------------------------------------------------------------------------------
 	# Get List known of SourceOne Servers
@@ -190,9 +181,6 @@ process {
 	$cServers += $scriptComputerName
 
 	# Get SourceOne Worker Servers
-	$dbName = $actDb
-	$dbServer = $actDbServer
-
 	$dtResults = Get-ES1Workers 
 	foreach ($row in $dtResults)
 	{
@@ -580,17 +568,17 @@ function Get-ES1ActivityDatabase
  Gets the SourceOne SQL server and activity DB Name and if not already set, sets the session global
   variables $s1ActServer and $s1actDb
 
-.PARAMETER <Force>
-	the Force parameter will cause the session gloabl values to be updated/refreshed
+.PARAMETER Force
+	the Force parameter will cause the session global values to be updated/refreshed
 .EXAMPLE
 	$activityDB=Get-ES1ActivityDatabase
 
 .EXAMPLE
 	Get-ES1ActivityDatabase -force
 	
-    DBName      DBServer
-    ----------  --------------
-    ES1Activity SQL2008   
+DBName      DBServer
+----------  --------------
+ES1Activity SQL2008   
 
 .OUTPUTS
 
@@ -605,7 +593,7 @@ try
 	{
 
 		$s1R = get-ES1RegLocation 
-		$s1RegVersion = $s1R + "versions"
+		#$s1RegVersion = $s1R + "versions"
 
 		$script:s1ActServer = (Get-ItemProperty -Path $s1R).Server_JDF
 		$script:s1actDb = (Get-ItemProperty -Path $s1R).DB_JDF
@@ -978,7 +966,7 @@ foreach ($comp in $Script:s1servers)
 	}
 	catch
 	{
-		
+		Write-Error $_
 	}
 
 }
@@ -1179,7 +1167,7 @@ PROCESS {
 		{
 			$EMCTraceSettings = $entry + "\$component\Settings"
 			write-verbose $EMCTraceSettings
-			$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
+			#$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
 
 			try
 			{
@@ -1426,7 +1414,7 @@ PROCESS {
 			write-output $c
             $shortname=Split-Path -Path $c -Leaf
 			$ZipFile.CopyHere($c)
-            $size = $ZipFile.Items().Item($shortname).Size
+            #$size = $ZipFile.Items().Item($shortname).Size
 
             # CopyHere is Asynchronous, need to wait before adding another....            
             while($ZipFile.Items().Item($shortname) -Eq $null)
@@ -1888,7 +1876,7 @@ PROCESS {
 		{
 			$EMCTraceSettings = $EMCTrace + "\$TRentry\Settings"
 			write-verbose $EMCTraceSettings
-			$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
+			#$EMCTraceEnable = $EMCTraceSettings + "\Listeners\File"
 
 			try
 			{

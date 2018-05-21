@@ -36,6 +36,7 @@ function New-ES1ArchiveFolderOptions
 .EXAMPLE
 	$newfolder = New-ES1ArchiveFolderOptions -ArchiveName 'MyArchive' -FolderName '2Year' -ContainerLocation '\\S1MASTER7-J1\PBA' -IndexLocation '\\S1MASTER7-J1\IndexShare' 
 #>
+[OutputType('EMC.Interop.ExAsAdminAPI.exASObjectType.exASObjectType_ArchiveFolder')]
 [CmdletBinding()]
 PARAM( [Parameter(Mandatory=$true)]
 		[Alias('archive')]
@@ -119,9 +120,7 @@ PROCESS {
 		
 		# Store content inside containers, set this to a size in KB for large content outside containers.
 		$backendFolder.AttachmentSizeThreshold=-2      
-		
-		#$backendFolder.ConceptBasedFolderType = ConceptType
-		#$backendFolder.StorageType = [EMC.Interop.ExASBaseAPI.exASFolderStorageType]::exASStorageType_NASContainer
+			
 		
 		# release the repo object
 		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($repo) > $null
@@ -693,13 +692,13 @@ PROCESS {
             $folderplan=$repo.GetFolderPlan()
             $folders = $folderplan.EnumerateArchiveFolders()
 			
-			# change the properies to be like the MMC display
-			$folderSummary = $folders | Select Name, @{name="Volumes"; Expression = {$_.TotalVolumes}},`
+			# change the properties to be like the MMC display
+			$folderSummary = $folders | Select-Object Name, @{name="Volumes"; Expression = {$_.TotalVolumes}},`
                                         @{name="Volume Items"; Expression = {$_.TotalMsgInVolumes}},`
                                         @{name="Volume Size(MB)"; Expression = {$_.TotalSizeInVolumes}}, `
                                         @{name="Indexes"; Expression = {$_.TotalIndexes}},`
                                         @{name="Index Items"; Expression = {$_.TotalMsgInIndexes}},`
-                                        @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`                                       
+                                        @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`
                                         @{name="Errors"; Expression = {$_.FPErrorCount}}
 
             # put the archive name on each item, so consumers have context											
@@ -817,7 +816,7 @@ PROCESS {
 			$containerfolders=$folder.EnumerateContainerFolders()
 
 			# change the properies to be like the MMC display
-			$MonthsSummary += $containerfolders | Select @{name="Archive"; Expression = {$repo.Name}}, `
+			$MonthsSummary += $containerfolders | Select-Object @{name="Archive"; Expression = {$repo.Name}}, `
 								@{name="Folder"; Expression = {$folder.Name}}, `
                                 Name, `
                                 @{name="Volumes"; Expression = {$_.TotalVolumes}},`
@@ -825,7 +824,7 @@ PROCESS {
                                 @{name="Volume Size(MB)"; Expression = {$_.TotalSizeInVolumes}}, `
                                 @{name="Indexes"; Expression = {$_.TotalIndexes}},`
                                 @{name="Index Items"; Expression = {$_.TotalMsgInIndexes}},`
-                                @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`                                       
+                                @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},` 
                                 @{name="Errors"; Expression = {$_.FPErrorCount}}
   
 		}

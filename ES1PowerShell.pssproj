@@ -44,7 +44,6 @@
     <Compile Include="SourceOne_POSH\ES1_WorkerRolesUtils.psm1" />
     <Compile Include="SourceOne_POSH\ExternalUtils.psm1" />
     <Compile Include="SourceOne_POSH\folderdefaults.xml" />
-    <Compile Include="SourceOne_POSH\RemovedFunctions.psm1" />
     <Compile Include="UnitTests\ES1PowerShell.tests.ps1" />
     <Compile Include="UnitTests\ES1_Configuration.Tests.ps1" />
     <Compile Include="UnitTests\ES1_DBUtils.tests.ps1" />

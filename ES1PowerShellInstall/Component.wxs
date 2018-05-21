@@ -6,7 +6,7 @@
         <!--Component Id="Profile" Guid="*" -->
         <File KeyPath="yes" Source="$(var.SolutionDir)ES1POSHProfile.ps1"  />
           <File Source="$(var.SolutionDir)\$(var.Configuration)\ShortcutIcon.exe"  />
-        <File Source="$(var.SolutionDir)\LICENSE"  />
+          <File Source="$(var.SolutionDir)\LICENSE"  />
         
         <Environment Id="AppendPSModulePath" Action="set" Name="PSModulePath" Part="last" System="yes" Value="[INSTALLFOLDER]" />
       </Component>

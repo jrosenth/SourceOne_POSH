@@ -5,7 +5,7 @@
 
     <ComponentGroup Id="RegistryComponents" Directory="INSTALLFOLDER">
       <Component Id="CmpInstallFolderRemember" Guid="*">
-        <RegistryKey Key="SOFTWARE\[Manufacturer]\SourceOne_POSH" Root="HKLM">
+        <RegistryKey Key="SOFTWARE\EMC\SourceOne_POSH" Root="HKLM">
           <RegistryValue KeyPath="yes" Name="InstallFolder" Type="string" Value="[INSTALLFOLDER]" />
         </RegistryKey>
       </Component>

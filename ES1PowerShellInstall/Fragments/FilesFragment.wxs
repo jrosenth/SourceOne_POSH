@@ -62,9 +62,6 @@
             <Component Id="cmp1786AF0C95FD7315EFC1C6FE26B0D71D" Guid="*">
                 <File Id="filEC8E7B31EA0A34109AC03F2701F1F075" KeyPath="yes" Source="$(var.ES1POSHFILES)\folderdefaults.xml" />
             </Component>
-            <Component Id="cmp96D36DC98CE73A512C27B59E8FDE83F1" Guid="*">
-                <File Id="fil446711427C9FA0F9A6F7F1F8313F1DC7" KeyPath="yes" Source="$(var.ES1POSHFILES)\RemovedFunctions.psm1" />
-            </Component>
             <Component Id="cmp3217BFBB9AA0AD10376010DB77BB7A7A" Guid="*">
                 <File Id="fil792DA7989974292587EB0E766B50BC2B" KeyPath="yes" Source="$(var.ES1POSHFILES)\SourceOne_POSH.psd1" />
             </Component>
@@ -92,7 +89,6 @@
             <ComponentRef Id="cmp8C615EEC3C5334CDE78CAF9FC60A206D" />
             <ComponentRef Id="cmpED7C3F3093AD605E6DCB37BCE37FAFD5" />
             <ComponentRef Id="cmp1786AF0C95FD7315EFC1C6FE26B0D71D" />
-            <ComponentRef Id="cmp96D36DC98CE73A512C27B59E8FDE83F1" />
             <ComponentRef Id="cmp3217BFBB9AA0AD10376010DB77BB7A7A" />
         </ComponentGroup>
     </Fragment>

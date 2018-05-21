@@ -56,11 +56,11 @@ PROCESS {
 		$servers=@(Get-ES1Servers)
 
 		$dbServers=@()
-		$dbServers = @(Get-ES1ArchiveDatabases | Select DBServer -Unique )
-		$activityDBInfo = Get-ES1ActivityDatabase | Select DBServer
+		$dbServers = @(Get-ES1ArchiveDatabases | Select-Object DBServer -Unique )
+		$activityDBInfo = Get-ES1ActivityDatabase | Select-Object DBServer
 		$dbServers +=  $activityDBInfo
 
-		$dbServers = $dbServers| Select -unique
+		$dbServers = $dbServers| Select-Object -unique
 		
 		# Add database servers to the list, parse the instance name if there is one
         foreach($DBServer in $dbservers)
@@ -122,7 +122,7 @@ PROCESS {
 
   			if ($pingOK -eq $local)
 				{
-					$exeFiles = ls -recurse -path $installpath -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
+					$exeFiles = Get-ChildItem -recurse -path $installpath -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
 					$AllBinaries = $exeFiles
 				}
 				else
@@ -132,7 +132,7 @@ PROCESS {
 					{
 
 						$files = Invoke-Command -Cn $pingOK  -ScriptBlock{
-							$exeFiles = ls -recurse -path $Args[0] -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
+							$exeFiles = Get-ChildItem -recurse -path $Args[0] -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
 							$exeFiles
 						} -Args $installPath -ErrorVariable remoteErr -ErrorAction SilentlyContinue
 
@@ -320,11 +320,11 @@ Try
 	$aServers=@(Get-ES1Servers)
 
 	$dbServers=@()
-	$dbServers = @(Get-ES1ArchiveDatabases | Select DBServer -Unique )
-	$activityDBInfo = Get-ES1ActivityDatabase | Select DBServer
+	$dbServers = @(Get-ES1ArchiveDatabases | Select-Object DBServer -Unique )
+	$activityDBInfo = Get-ES1ActivityDatabase | Select-Object DBServer
 	$dbServers +=  $activityDBInfo
 
-	$dbServers = $dbServers| Select -unique
+	$dbServers = $dbServers| Select-Object -unique
 	# Add database servers to the list, parse the instance name if there is one
     foreach($DBServer in $dbServers)
     {
@@ -352,7 +352,7 @@ Try
     
     
     # Remove Duplicates from SourceOne Server List
-    $aServers = @($aServers | Sort-Object | Select -uniq)
+    $aServers = @($aServers | Sort-Object | Select-Object -uniq)
 
     # Add SourceOne Servers
     if ($aServers)
@@ -434,12 +434,61 @@ END {}
 
 <#
 .SYNOPSIS
-  Adapted from Mike Tramont's S1emCIFSShareMon.ps1
+	Gets the disk space characteristics for the various CIFS shares used by an archive.
+
 .DESCRIPTION
-  
+	Gets the disk space characteristics for the various CIFS shares used by an archive.
+	
+	The location type is returned in shorthand as follows:
+	'MCL' = Message Center location
+	'AFL' = Archive Container location
+	'FTL' = Full Text Index location (for ISYS indexes)
+
+  Adapted from Mike Tramont's S1emCIFSShareMon.ps1
+    
 .OUTPUTS
 
+.PARAMETER threshold
+	Percent Free Threshold to use for issuing a warning on the Message Center location. 
+
 .EXAMPLE
+Get-ES1CIFSShareStatus | ft -AutoSize
+
+DATABASE ES1Archive on sql2008-j1:  Querying CIFS Shares
+DATABASE IPMArchive on sql2008-j1:  Querying CIFS Shares
+DATABASE SecondIPMArchive on sql2008-j1:  Querying CIFS Shares
+
+DateTime            Share                                          Type Free   Size_GB Free_GB Used_GB Status
+--------            -----                                          ---- ----   ------- ------- ------- ------
+2018-05-15 13:36:43 \\S1MASTER64\PBA                               AFL  98.7 % 30.0    29.6    0.4     Ok
+2018-05-15 13:36:43 \\S1MASTER64\MSGCENTER                         MCL  45.4 % 30.0    13.6    16.4    Ok
+2018-05-15 13:36:43 \\S1MASTER64\INDEXSHARE                        FTL  45.4 % 30.0    13.6    16.4    Ok
+2018-05-15 13:36:43 \\S1NASServer\ARCHIVES\ARCHIVE1                AFL  64.1 % 931.5   597.3   334.2   Ok
+
+.EXAMPLE
+Get-ES1CIFSShareStatus -threshold 50.0 | where {$_.Status -eq 'Failed' -or $_.Status -eq 'Warning'} | select Share, Type,Status | ft -AutoSize
+
+DATABASE ES1Archive on sql2008-j1:  Querying CIFS Shares
+DATABASE IPMArchive on sql2008-j1:  Querying CIFS Shares
+DATABASE SecondIPMArchive on sql2008-j1:  Querying CIFS Shares
+Cannot access CIFS Share:  \\ESQLEXT4-J\EX-INDEXES
+Cannot access CIFS Share:  \\ESQLEX4-J\EX_INDEXES
+Cannot access CIFS Share:  \\ESQLEXT4-J\EXINDEXMIRROR
+Cannot access CIFS Share:  \\S1MASTER7-J1\MSGCENTER
+Cannot access CIFS Share:  \\ESQLEXT4-J\ESQLEXT4-EMAILXTENDER
+Cannot access CIFS Share:  \\ESQLEX4-J\EX_CONTAINERS
+Cannot access CIFS Share:  \\ESQLEXT4-J\ESQLEXT4-CONTAINERS
+
+Share                              Type Status
+-----                              ---- ------
+\\ESQLEXT4-J\EX-INDEXES            FTL  Failed
+\\ESQLEX4-J\EX_INDEXES             FTL  Failed
+\\ESQLEXT4-J\EXINDEXMIRROR         FTL  Failed
+\\S1MASTER7-J1\MSGCENTER           MCL  Failed
+\\S1MASTER64\MSGCENTER             MCL  Warning
+\\ESQLEXT4-J\ESQLEXT4-EMAILXTENDER FTL  Failed
+\\ESQLEX4-J\EX_CONTAINERS          AFL  Failed
+\\ESQLEXT4-J\ESQLEXT4-CONTAINERS   AFL  Failed
 
 #>
 Function Get-ES1CIFSShareStatus
@@ -447,7 +496,7 @@ Function Get-ES1CIFSShareStatus
 	[CmdletBinding()]
 	PARAM (
 		[Parameter(Position=0,Mandatory=$false)]
-		$threshold= 10.0
+		[double] $threshold= 10.0
 	)
 BEGIN {
 	$scriptStart = Get-Date
@@ -491,8 +540,8 @@ Try
             Add-Log "DATABASE $dbName on $dbServer`:  Querying CIFS Shares"
 
 			# For expediancy I kept this as SQL queries, but the shares are accessible in the COM
-			#   archvie folder object... too
-            $hTemp = Get-S1CifsShares $dbServer $dbName
+			#   archive folder object... too
+            $hTemp = Get-S1CifsShares -DBServer $dbServer -DBName $dbName
             foreach ($key in $hTemp.Keys)
             {
                 if ($hCifsShares.ContainsKey($key) -eq $false)
@@ -635,20 +684,44 @@ END {}
 }
 
 
+<#
+.SYNOPSIS
+	Gets the ContainerLocations,IndexLocations, and MsgCenterPaths for archive folders defined in the given archive database.  
+	NOTE: uses direct SQL queries for legacy reasons.
+	Returns a hashmap of the UNC path and short name for the location type.
 
-#-------------------------------------------------------------------------------
-# Function:  Get-S1CifsShares
-#-------------------------------------------------------------------------------
+.DESCRIPTION
+	Gets the ContainerLocations,IndexLocations, and MsgCenterPaths for archive folders defined in the given archive database.
+	NOTE: uses direct SQL queries for legacy reasons.
+	Returns a HashMap of the UNC path and short name for the location type.
+
+	'MCL' = Message Center location
+	'AFL' = Archive Container location
+	'FTL' = Full Text Index location (for ISYS indexes)
+
+.OUTPUTS
+
+.EXAMPLE
+
+#>
 Function Get-S1CifsShares
 {
-    Param
+[CmdletBinding()]
+Param
     (
-        [Parameter(Position=0,Mandatory=$true)]
+        [Parameter(Position=0,Mandatory=$true,
+					ValueFromPipeLine=$true, 
+					ValueFromPipeLineByPropertyName=$true)]
         [string] $dbServer,
-
-        [Parameter(Position=1,Mandatory=$true)]
+        [Parameter(Position=1,Mandatory=$true,
+				ValueFromPipeLine=$true, 
+		ValueFromPipeLineByPropertyName=$true)]
         [string] $dbName
     )
+
+BEGIN {}
+
+PROCESS {
 
     #
     # Define SQL Queries
@@ -725,6 +798,9 @@ WHERE LEN(MacAddress) > 0
     # Return Hash Table
     #
     , $hShares
+ }
+ 
+ END{}
     
 }
 
@@ -753,6 +829,7 @@ function Get-DriveInfo {
         }
         catch
         {
+			Write-Error $_
         }
     }
     
@@ -825,6 +902,7 @@ function Get-SpaceMB {
         }
         catch
         {    
+			Write-Error $_
         }
     }
 

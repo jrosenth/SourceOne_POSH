@@ -31,6 +31,17 @@ $svcResume = 6
 $WaitTime = '00:00:30'
 $WaitSeconds = 50
 
+Add-Type -TypeDefinition @"
+public enum ServiceAction{
+	Show,
+	Start,
+	Stop,
+	Restart,
+	Pause,
+	Resume
+}
+"@
+
 
 function Get-ES1Services
 {
@@ -107,23 +118,29 @@ function Show-ES1Services
 {
 <#
 .SYNOPSIS
- Show-ES1Services
+	Displays a list of SourceOne Services on the specified Server(s)
+
 .DESCRIPTION
-Displays a list of SourceOne Services on the specified Server(s)
-.PARAMETER <ComputerName>
-Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer
-. The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
-.PARAMETER <Credential>
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+	Displays a list of SourceOne Services on the specified Server(s)
+
+.PARAMETER ComputerName
+	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to 
+	specify the local computer. The local computer is the default. When the remote computer is in a different domain from the user, 
+	you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
+
+.PARAMETER Credential
+	Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, 
+	such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by the
+	Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+
 .EXAMPLE
 Show-ES1Services
 
-displayname Name State systemname
------------ ---- ----- ----------
-EMC SourceOne Address Resolution ES1AddressResolutionService Running IPMWORKER3
-EMC SourceOne Inplace Migration ES1InPlaceMigService Running IPMWORKER3
-EMC SourceOne Job Dispatcher ExJobDispatcher Running IPMWORKER3
+displayname                      Name                        State    systemname
+-----------                      ----                        -----    ----------
+EMC SourceOne Address Resolution ES1AddressResolutionService Running  IPMWORKER3
+EMC SourceOne Inplace Migration  ES1InPlaceMigService        Running  IPMWORKER3
+EMC SourceOne Job Dispatcher     ExJobDispatcher             Running  IPMWORKER3
 
 #>
 [CmdletBinding()]
@@ -153,13 +170,13 @@ function Set-ES1WaitTimeforServices
 {
 <#
 .SYNOPSIS
-   Set-ES1WaitTimeforServices 
+   Update global session variable $WaitSeconds used to manage services
 .DESCRIPTION
-   Update variable $WaitSeconds used to manage services
+   Update global session variable $WaitSeconds used to manage services
 .PARAMETER seconds
    provide the number of seconds between 1 and 60
 .EXAMPLE
-   <An example of using the script>
+   
 #>
 	[CmdletBinding()]
 	param
@@ -188,6 +205,9 @@ function Set-ES1WaitTimeforServices
    all SourceOne machines
 .DESCRIPTION
    Uses $s1Servers list to query all servers for status of s1 services
+
+.OUTPUT 
+	System.ServiceProcess.ServiceController
 .EXAMPLE
 	Get-AllES1Services
 	
@@ -309,9 +329,6 @@ Displays the status of all SourceOne Services on all known machines
 .EXAMPLE
 Show-AllES1Services
 
-
-
-
 #>
 [CmdletBinding()]
 param()
@@ -326,19 +343,28 @@ select-object MachineName,DisplayName,Name,Status | Format-Table -AutoSize #| Ou
 
 <#
 .SYNOPSIS
-   Update-ES1Services
+   Changes the state of all the "EMC SourceOne*" services on the specified machine(s)
 .DESCRIPTION
-   Guts of (almost) all the SourceOne service functions
+    Changes the state of all the "EMC SourceOne*" services on the specified machine(s)
+    Guts of (almost) all the other SourceOne service functions
+ 
  .PARAMETER Computername
  Default to localhost, server name string or array of server names
+ 
  .PARAMETER Action
-  1 to show services
-  2 to start services
-  3 to stop services
+    [ServiceAction] enum
+
+ .PARAMETER  Wait
+    Wait until the desired state is reached.
+
 .EXAMPLE
-	Update-ES1Services
+	Update-ES1Services -Action Stop
+
+.EXAMPLE
+	Update-ES1Services -ComputerName ArchiveServ1 -Action Stop
+
 #>
-function Update-ES1Services
+function Update-ES1Services 
 {
  [CmdletBinding()]
 param
@@ -347,9 +373,9 @@ param
 		ValueFromPipeLine=$true, 
 		ValueFromPipeLineByPropertyName=$true)]
 	[string[]]$ComputerName = 'localhost',
-	$Action = $svcShow,
+	[ServiceAction] $Action = [ServiceAction]::Show,
 	$Credential = $remCreds,
-	$Wait = $true
+	[bool]$Wait = $true
 
 )
 
@@ -381,7 +407,7 @@ foreach ($computer in $ComputerName)
         
             Write-Progress -id 2 -parentId 1 -Activity "Changing Services on $($computer)" -Status "Number of Services: $svcCount " -percentcomplete (($j/$svcCount)*100) -Currentoperation "Service : $($service.Name) ($dispSvcCnt)"
 
-	        if ($Action -eq $svcShow)
+	        if ($Action -eq [ServiceAction]::Show)
 	        {
                Write-Error "Unsupported feature !"
 		        return
@@ -396,7 +422,7 @@ foreach ($computer in $ComputerName)
 		            switch ($Action)
 		            {
 
-			            $SvcStop 
+			            ([ServiceAction]::Stop) 
                         {
                             $WaitStr = 'Stopped'
                             if (($service.Status -ne "Stopped") -and ($service.Status -ne "StopPending"))
@@ -409,14 +435,14 @@ foreach ($computer in $ComputerName)
                             break
                         }
 
-			            $SvcStart 
+			           ([ServiceAction]::Start) 
                         {
                             $WaitStr = 'Running'
                             $service.Start()
                              break
                          }
 
-			            $SvcPause 
+			            ([ServiceAction]::Pause) 
                         { 
                             $WaitStr = 'Paused'
                             $service.Pause()
@@ -475,6 +501,8 @@ foreach ($computer in $ComputerName)
    Starts the SourceOne services on the machine or machines specified
 .PARAMETER ComputerName
    The name of target server or array of servers
+.PARAMETER  Wait
+    Wait until the desired state is reached.
 .EXAMPLE
 	Start-ES1Services Master
 .EXAMPLE
@@ -490,9 +518,9 @@ function Start-ES1Services
 		ValueFromPipeLineByPropertyName=$true)]
 	[string[]]$ComputerName = 'localhost',
 	$Credential = $remCreds,
-	$Wait = $true
+	[bool]$Wait = $true
 )
-$s = Update-ES1Services -ComputerName $ComputerName -action $SvcStart -Credential $Credential -wait $Wait
+$s = Update-ES1Services -ComputerName $ComputerName -action Start -Credential $Credential -wait $Wait
 
 Show-ES1Services $ComputerName
 
@@ -505,6 +533,8 @@ Show-ES1Services $ComputerName
    Performs a "Stop" and then "Start" on all SourceOne services on the specified machine(s)
 .PARAMETER ComputerName
    The name of target server or array of servers
+.PARAMETER  Wait
+    Wait until the desired state is reached.
 .EXAMPLE
 	Restart-ES1Services Master
 .EXAMPLE
@@ -521,11 +551,11 @@ function Restart-ES1Services
 		ValueFromPipeLineByPropertyName=$true)]
 	[string[]]$ComputerName = 'localhost',
 	$Credential = $remCreds,
-	$Wait = $true
+	[bool]$Wait = $true
 
 )
-$s = Update-es1Services -ComputerName $ComputerName -action $SvcStop -Credential $Credential -wait $true
-$s = Update-es1Services -ComputerName $ComputerName -action $SvcStart -Credential $Credential -wait $Wait
+$s = Update-es1Services -ComputerName $ComputerName -action Stop -Credential $Credential -wait $true
+$s = Update-es1Services -ComputerName $ComputerName -action Start -Credential $Credential -wait $Wait
 
 Show-ES1Services $ComputerName
 
@@ -537,23 +567,24 @@ function Pause-ES1Services
 {
 <#
 .SYNOPSIS
- Pause-ES1Services
+ Pauses SourceOne service.  Not all SourceOne services support this state.
 .DESCRIPTION
 Pauses SourceOne service.  Not all SourceOne services support this state.
 The only s1 service that appears to pause is DCWorkerService
 
-.PARAMETER <ComputerName>
-Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer
-. The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
+.PARAMETER ComputerName
+Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. 
+Use the local computer Name, use localhost, or use a dot (.) to specify the local computer. The local computer is the default. 
+When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also
+be piped to the cmdlet.
 
-.PARAMETER <Credential>
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+.PARAMETER Credential
+Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such
+as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by the
+Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 
-.EXAMPLE
-
-.EXAMPLE
-
+.PARAMETER  Wait
+    Wait until the desired state is reached.
 #>
 [CmdletBinding()]
 param
@@ -563,10 +594,10 @@ param
 		ValueFromPipeLineByPropertyName=$true)]
 	[string[]]$ComputerName = 'localhost',
 	$Credential = $remCreds,
-	$Wait = $true
+	[bool]$Wait = $true
 
 )
-$s = Update-es1Services -ComputerName $ComputerName -action $SvcPause -Credential $Credential -wait $Wait
+$s = Update-es1Services -ComputerName $ComputerName -action Pause -Credential $Credential -wait $Wait
 
 Show-es1Services $ComputerName
 
@@ -576,14 +607,18 @@ function Resume-ES1Services
 {
 <#
 .SYNOPSIS
- Resume-ES1Services
+	Resumes SourceOne service.  Not all SourceOne services support this state.
 .DESCRIPTION
-
+	Resumes SourceOne service.  Not all SourceOne services support this state.
 .PARAMETER ComputerName
 
-.EXAMPLE
+.PARAMETER Credential
+Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such
+as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by the
+Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 
-.EXAMPLE
+.PARAMETER  Wait
+    Wait until the desired state is reached.
 
 #>
 [CmdletBinding()]
@@ -598,7 +633,7 @@ param
 
 )
 
-$s = Update-ES1Services -ComputerName $ComputerName -action $SvcResume -Credential $Credential -wait $Wait
+$s = Update-ES1Services -ComputerName $ComputerName -action Resume -Credential $Credential -wait $Wait
 Show-es1Services $ComputerName
 
 }
@@ -611,6 +646,15 @@ Show-es1Services $ComputerName
    Stops SourceOne services on a specific machine(s)
 .PARAMETER ComputerName
    The name of target server or array of servers
+
+.PARAMETER Credential
+	Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such
+	as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by the
+	Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+
+.PARAMETER  Wait
+    Wait until the desired state is reached.
+
 .EXAMPLE
 	Stop-ES1Services Master
 .EXAMPLE
@@ -627,7 +671,7 @@ param
 	ValueFromPipeLineByPropertyName=$true)]
 [string[]]$ComputerName = 'localhost',
 $Credential = $remCreds,
-$Wait = $true
+[bool]$Wait = $true
 
     )
 
@@ -646,7 +690,7 @@ $Wait = $true
     }
 
 
-    $s = Update-ES1Services -ComputerName $ComputerName -action $SvcStop -Credential $Credential -wait $wait
+    $s = Update-ES1Services -ComputerName $ComputerName -action Stop -Credential $Credential -wait $wait
 
 Show-es1Services $ComputerName
 
@@ -660,14 +704,17 @@ function Get-S1ServicesByAccount
 .DESCRIPTION
 	Get the services which use the specified account (s1 service account) as the user
 
-.PARAMETER <ComputerName>
-Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer
-. The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
-.PARAMETER <s1acct>
-SourceOne account
-.PARAMETER <Credential>
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+.PARAMETER ComputerName
+	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name,
+	a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer.
+	The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully 
+	qualified domain Name. This parameter can also be piped to the cmdlet.
+.PARAMETER s1acct
+	SourceOne account
+.PARAMETER Credential
+	Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name,
+	such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is 
+	returned by the Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 
 
 .EXAMPLE
@@ -714,12 +761,15 @@ param
 .DESCRIPTION
 	Shows a list of the services which use the specified account (s1 service account) as the user on the given Computer
 
-.PARAMETER <ComputerName>
-Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer
-. The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
-.PARAMETER <Credential>
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+.PARAMETER ComputerName
+	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, 
+	a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer.
+	The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. 
+	This parameter can also be piped to the cmdlet.
+.PARAMETER Credential
+	Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, 
+	such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by the
+	Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 
 
 .EXAMPLE
@@ -761,7 +811,7 @@ function Show-AllS1ServicesByAccount
 .DESCRIPTION
 	Shows a list of the services which use the specified account (s1 service account) as the user on all known S1 machines
 
-.PARAMETER 
+.PARAMETER s1acct
 
 
 .EXAMPLE
@@ -803,30 +853,34 @@ function Show-AllS1ServicesByAccount
     }
 }
 
-function Update-S1ServicesAccountInfo
 <#
 .SYNOPSIS
 	Updates the password for all S1 services on the specified machine(s).  
 .DESCRIPTION
 	Updates the password for all S1 services on the specified machine(s).  
-
-.PARAMETER <ComputerName>
-Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer
-. The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
-.PARAMETER <s1acct> 
+	This does not perform a password change for the account itself.  This only sets the password for the service to run with.
+.PARAMETER ComputerName
+	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, 
+	a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify 
+	the local computer. The local computer is the default. When the remote computer is in a different domain from the user, you must use 
+	a fully qualified domain Name. This parameter can also be piped to the cmdlet.
+.PARAMETER s1acct
 	SourceOne service account name
-.PARAMETER <Password> 
+.PARAMETER Password
 	System.Security.SecureString containing the password to use.  If not supplied you will be prompted and input will be masked.
-.PARAMETER <timeout> 
+.PARAMETER timeout 
 	The number of seconds to wait for services to stop or start.  The default is 10 seconds
-.PARAMETER <Credential> 
-(UNUSED)
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+.PARAMETER Credential
+  (UNUSED)
+  Specifies a user account that has permission to perform this action. The default is the current user. 
+  Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is 
+  returned by the Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 
-.EXAMPLE
+.EXAMPLE 
+
+
 #>
-
+function Update-S1ServicesAccountInfo
 {
 [CmdletBinding()]
 param
@@ -843,16 +897,17 @@ param
 	$Credential = $remCreds
 )
 
-    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)                                                                                                       
-    $s1pw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) 
-
-    if (-not (Test-ADCredential -username $s1acct -password $s1pw))
+   
+    if (-not (Test-ADCredential -username $s1acct -password $Password))
     {
         Write-Error "Password provided is not the current or correct password !"
         return
 
     }
      
+	 $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)                                                                                                       
+     $s1pw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) 
+
      $results=@()
 
      $waitRet=$false 
@@ -977,7 +1032,6 @@ param
 
 }
 
-function Update-AllS1ServicesAccountInfo
 <#
 .SYNOPSIS
 	Updates the password for all S1 services on all known SourceOne machines.
@@ -985,12 +1039,12 @@ function Update-AllS1ServicesAccountInfo
 	Updates the password for all S1 services on all known SourceOne machines.  Not all machines running SourceOne services are known to
 	the SourceOne systems.
 
-.PARAMETER <s1acct> 
+.PARAMETER s1acct
 	SourceOne service account name
 
-.PARAMETER <timeout> 
+.PARAMETER timeout
 	The number of seconds to wait for services to stop or start.  The default is 10 seconds
-.PARAMETER <Credential> 
+.PARAMETER Credential
 (UNUSED)
 Specifies a user account that has permission to perform this action. The default is the current user. 
 Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, 
@@ -998,7 +1052,7 @@ such as an object that is returned by the Get-Credential cmdlet. When you Type a
 
 .EXAMPLE
 #>
-
+function Update-AllS1ServicesAccountInfo
 {
 [CmdletBinding()]
 param

@@ -6,7 +6,7 @@
 <?define UpgradeCode="f759f4b4-67ba-4455-9f9e-98d98f300bd0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"> 
 	<Product Id="*" Name="EMC SourceOne PowerShell" Language="1033" Version="$(var.ProductVersion)" 
-           Manufacturer="EMC" UpgradeCode="$(var.UpgradeCode)">
+           Manufacturer="Dell Inc." UpgradeCode="$(var.UpgradeCode)">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." 
@@ -17,8 +17,8 @@
     <PropertyRef Id="POWERSHELL3VERSION" />
     <PropertyRef Id="S1INSTALLDIR" />
     
-    <Condition Message="Installing [ProductName] requires PowerShell Version 2.0 or later.">
-      <![CDATA[Installed OR (POWERSHELLVERSION >= "2.0" OR POWERSHELL3VERSION >= "2.0")]]>
+    <Condition Message="Installing [ProductName] requires PowerShell Version 4.0 or later.">
+      <![CDATA[Installed OR (POWERSHELLVERSION >= "2.0" AND POWERSHELL3VERSION >= "4.0")]]>
     </Condition>
     
     <Feature Id="ModuleFeature" Title="Install EMC SourceOne PowerShell Module" Level="1">
