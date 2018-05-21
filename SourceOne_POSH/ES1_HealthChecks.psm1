@@ -56,11 +56,11 @@ PROCESS {
 		$servers=@(Get-ES1Servers)
 
 		$dbServers=@()
-		$dbServers = @(Get-ES1ArchiveDatabases | Select DBServer -Unique )
-		$activityDBInfo = Get-ES1ActivityDatabase | Select DBServer
+		$dbServers = @(Get-ES1ArchiveDatabases | Select-Object DBServer -Unique )
+		$activityDBInfo = Get-ES1ActivityDatabase | Select-Object DBServer
 		$dbServers +=  $activityDBInfo
 
-		$dbServers = $dbServers| Select -unique
+		$dbServers = $dbServers| Select-Object -unique
 		
 		# Add database servers to the list, parse the instance name if there is one
         foreach($DBServer in $dbservers)
@@ -122,7 +122,7 @@ PROCESS {
 
   			if ($pingOK -eq $local)
 				{
-					$exeFiles = ls -recurse -path $installpath -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
+					$exeFiles = Get-ChildItem -recurse -path $installpath -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
 					$AllBinaries = $exeFiles
 				}
 				else
@@ -132,7 +132,7 @@ PROCESS {
 					{
 
 						$files = Invoke-Command -Cn $pingOK  -ScriptBlock{
-							$exeFiles = ls -recurse -path $Args[0] -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
+							$exeFiles = Get-ChildItem -recurse -path $Args[0] -Include @("*.exe") | select-object -ExpandProperty VersionInfo 
 							$exeFiles
 						} -Args $installPath -ErrorVariable remoteErr -ErrorAction SilentlyContinue
 
@@ -320,11 +320,11 @@ Try
 	$aServers=@(Get-ES1Servers)
 
 	$dbServers=@()
-	$dbServers = @(Get-ES1ArchiveDatabases | Select DBServer -Unique )
-	$activityDBInfo = Get-ES1ActivityDatabase | Select DBServer
+	$dbServers = @(Get-ES1ArchiveDatabases | Select-Object DBServer -Unique )
+	$activityDBInfo = Get-ES1ActivityDatabase | Select-Object DBServer
 	$dbServers +=  $activityDBInfo
 
-	$dbServers = $dbServers| Select -unique
+	$dbServers = $dbServers| Select-Object -unique
 	# Add database servers to the list, parse the instance name if there is one
     foreach($DBServer in $dbServers)
     {
@@ -352,7 +352,7 @@ Try
     
     
     # Remove Duplicates from SourceOne Server List
-    $aServers = @($aServers | Sort-Object | Select -uniq)
+    $aServers = @($aServers | Sort-Object | Select-Object -uniq)
 
     # Add SourceOne Servers
     if ($aServers)
@@ -753,6 +753,7 @@ function Get-DriveInfo {
         }
         catch
         {
+			Write-Error $_
         }
     }
     
@@ -825,6 +826,7 @@ function Get-SpaceMB {
         }
         catch
         {    
+			Write-Error $_
         }
     }
 

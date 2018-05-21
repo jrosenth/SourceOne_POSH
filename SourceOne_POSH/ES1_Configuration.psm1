@@ -978,7 +978,7 @@ foreach ($comp in $Script:s1servers)
 	}
 	catch
 	{
-		
+		Write-Error $_
 	}
 
 }

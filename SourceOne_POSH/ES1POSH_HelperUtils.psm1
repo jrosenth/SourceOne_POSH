@@ -269,14 +269,18 @@ function Test-ADCredential {
     Param
     (
         [string]$UserName,
-        [string]$Password
+        [System.Security.SecureString]$Password
     )
     if (!($UserName) -or !($Password)) {
         Write-Warning 'Test-ADCredential: Please specify both user name and password'
     } else {
+
+		$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)                                                                                                       
+		$s1pw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) 
+
         Add-Type -AssemblyName System.DirectoryServices.AccountManagement
         $DS = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('domain')
-        $DS.ValidateCredentials($UserName, $Password)
+        $DS.ValidateCredentials($UserName, $s1pw)
     }
 }
 

@@ -693,13 +693,13 @@ PROCESS {
             $folderplan=$repo.GetFolderPlan()
             $folders = $folderplan.EnumerateArchiveFolders()
 			
-			# change the properies to be like the MMC display
-			$folderSummary = $folders | Select Name, @{name="Volumes"; Expression = {$_.TotalVolumes}},`
+			# change the properties to be like the MMC display
+			$folderSummary = $folders | Select-Object Name, @{name="Volumes"; Expression = {$_.TotalVolumes}},`
                                         @{name="Volume Items"; Expression = {$_.TotalMsgInVolumes}},`
                                         @{name="Volume Size(MB)"; Expression = {$_.TotalSizeInVolumes}}, `
                                         @{name="Indexes"; Expression = {$_.TotalIndexes}},`
                                         @{name="Index Items"; Expression = {$_.TotalMsgInIndexes}},`
-                                        @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`                                       
+                                        @{name="Index Size(MB)"; Expression = {$_.TotalSizeInIndexes}},`
                                         @{name="Errors"; Expression = {$_.FPErrorCount}}
 
             # put the archive name on each item, so consumers have context											
@@ -817,7 +817,7 @@ PROCESS {
 			$containerfolders=$folder.EnumerateContainerFolders()
 
 			# change the properies to be like the MMC display
-			$MonthsSummary += $containerfolders | Select @{name="Archive"; Expression = {$repo.Name}}, `
+			$MonthsSummary += $containerfolders | Select-Object @{name="Archive"; Expression = {$repo.Name}}, `
 								@{name="Folder"; Expression = {$folder.Name}}, `
                                 Name, `
                                 @{name="Volumes"; Expression = {$_.TotalVolumes}},`

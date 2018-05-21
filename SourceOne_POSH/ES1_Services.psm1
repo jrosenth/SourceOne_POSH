@@ -843,16 +843,17 @@ param
 	$Credential = $remCreds
 )
 
-    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)                                                                                                       
-    $s1pw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) 
-
-    if (-not (Test-ADCredential -username $s1acct -password $s1pw))
+   
+    if (-not (Test-ADCredential -username $s1acct -password $Password))
     {
         Write-Error "Password provided is not the current or correct password !"
         return
 
     }
      
+	 $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)                                                                                                       
+     $s1pw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr) 
+
      $results=@()
 
      $waitRet=$false 

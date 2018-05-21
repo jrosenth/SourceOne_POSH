@@ -464,7 +464,7 @@ function Join-Object
             }
         }
 
-        $AllProps = $AllProps | Select -Unique
+        $AllProps = $AllProps | Select-Object -Unique
 
         Write-Verbose "Combined set of properties: $($AllProps -join ', ')"
 
@@ -481,7 +481,7 @@ function Join-Object
                 {
                     foreach ($leftItem in $leftBucket)
                     {
-                        WriteJoinObjectOutput $leftItem $null $LeftProperties $RightProperties | Select $AllProps
+                        WriteJoinObjectOutput $leftItem $null $LeftProperties $RightProperties | Select-Object $AllProps
                     }
                 }
             }
@@ -491,7 +491,7 @@ function Join-Object
                 {
                     foreach ($rightItem in $rightBucket)
                     {
-                        WriteJoinObjectOutput $leftItem $rightItem $LeftProperties $RightProperties | Select $AllProps
+                        WriteJoinObjectOutput $leftItem $rightItem $LeftProperties $RightProperties | Select-Object $AllProps
                     }
                 }
             }
@@ -510,7 +510,7 @@ function Join-Object
                 {
                     foreach ($rightItem in $rightBucket)
                     {
-                        WriteJoinObjectOutput $null $rightItem $LeftProperties $RightProperties | Select $AllProps
+                        WriteJoinObjectOutput $null $rightItem $LeftProperties $RightProperties | Select-Object $AllProps
                     }
                 }
             }
@@ -661,12 +661,12 @@ Function Invoke-Ping
                     $StandardUserEnv = [powershell]::Create().addscript({
 
                         #Get modules and snapins in this clean runspace
-                        $Modules = Get-Module | Select -ExpandProperty Name
-                        $Snapins = Get-PSSnapin | Select -ExpandProperty Name
+                        $Modules = Get-Module | Select-Object -ExpandProperty Name
+                        $Snapins = Get-PSSnapin | Select-Object -ExpandProperty Name
 
                         #Get variables in this clean runspace
                         #Called last to get vars like $? into session
-                        $Variables = Get-Variable | Select -ExpandProperty Name
+                        $Variables = Get-Variable | Select-Object -ExpandProperty Name
                 
                         #Return a hashtable where we can access each.
                         @{
@@ -679,7 +679,7 @@ Function Invoke-Ping
                     if ($ImportVariables) {
                         #Exclude common parameters, bound parameters, and automatic variables
                         Function _temp {[cmdletbinding()] param() }
-                        $VariablesToExclude = @( (Get-Command _temp | Select -ExpandProperty parameters).Keys + $PSBoundParameters.Keys + $StandardUserEnv.Variables )
+                        $VariablesToExclude = @( (Get-Command _temp | Select-Object -ExpandProperty parameters).Keys + $PSBoundParameters.Keys + $StandardUserEnv.Variables )
                         Write-Verbose "Excluding variables $( ($VariablesToExclude | sort ) -join ", ")"
 
                         # we don't use 'Get-Variable -Exclude', because it uses regexps. 
@@ -687,14 +687,14 @@ Function Invoke-Ping
                         # There could be other variables with such problems.
                         # Scope 2 required if we move to a real module
                         $UserVariables = @( Get-Variable | Where { -not ($VariablesToExclude -contains $_.Name) } ) 
-                        Write-Verbose "Found variables to import: $( ($UserVariables | Select -expandproperty Name | Sort ) -join ", " | Out-String).`n"
+                        Write-Verbose "Found variables to import: $( ($UserVariables | Select-Object -expandproperty Name | Sort ) -join ", " | Out-String).`n"
 
                     }
 
                     if ($ImportModules) 
                     {
-                        $UserModules = @( Get-Module | Where {$StandardUserEnv.Modules -notcontains $_.Name -and (Test-Path $_.Path -ErrorAction SilentlyContinue)} | Select -ExpandProperty Path )
-                        $UserSnapins = @( Get-PSSnapin | Select -ExpandProperty Name | Where {$StandardUserEnv.Snapins -notcontains $_ } ) 
+                        $UserModules = @( Get-Module | Where {$StandardUserEnv.Modules -notcontains $_.Name -and (Test-Path $_.Path -ErrorAction SilentlyContinue)} | Select-Object -ExpandProperty Path )
+                        $UserSnapins = @( Get-PSSnapin | Select-Object -ExpandProperty Name | Where {$StandardUserEnv.Snapins -notcontains $_ } ) 
                     }
                 }
 
@@ -727,7 +727,7 @@ Function Invoke-Ping
                                 $runMin = [math]::Round( $runtime.totalminutes ,2 )
 
                                 #set up log object
-                                $log = "" | select Date, Action, Runtime, Status, Details
+                                $log = "" | Select-Object Date, Action, Runtime, Status, Details
                                 $log.Action = "Removing:'$($runspace.object)'"
                                 $log.Date = $currentdate
                                 $log.Runtime = "$runMin minutes"
@@ -782,7 +782,7 @@ Function Invoke-Ping
                                 }
                    
                                 #If runspace isn't null set more to true  
-                                ElseIf ($runspace.Runspace -ne $null ) {
+                                ElseIf ($null -ne $runspace.Runspace  ) {
                                     $log = $null
                                     $more = $true
                                 }
@@ -795,7 +795,7 @@ Function Invoke-Ping
 
                             #Clean out unused runspace jobs
                             $temphash = $runspaces.clone()
-                            $temphash | Where { $_.runspace -eq $Null } | ForEach {
+                            $temphash | Where { $Null -eq $_.runspace  } | ForEach {
                                 $Runspaces.remove($_)
                             }
 
@@ -844,7 +844,7 @@ Function Invoke-Ping
                                     [void]$list.Add($Ast.SubExpression)
                                 }
 
-                                $UsingVar = $UsingVariables | Group Parent | ForEach {$_.Group | Select -First 1}
+                                $UsingVar = $UsingVariables | Group Parent | ForEach {$_.Group | Select-Object -First 1}
         
                                 #Extract the name, value, and create replacements for each
                                 $UsingVariableData = ForEach ($Var in $UsingVar) {
@@ -936,11 +936,11 @@ Function Invoke-Ping
                     #Set up log file if specified
                     if( $LogFile ){
                         New-Item -ItemType file -path $logFile -force | Out-Null
-                        ("" | Select Date, Action, Runtime, Status, Details | ConvertTo-Csv -NoTypeInformation -Delimiter ";")[0] | Out-File $LogFile
+                        ("" | Select-Object Date, Action, Runtime, Status, Details | ConvertTo-Csv -NoTypeInformation -Delimiter ";")[0] | Out-File $LogFile
                     }
 
                     #write initial log entry
-                    $log = "" | Select Date, Action, Runtime, Status, Details
+                    $log = "" | Select-Object Date, Action, Runtime, Status, Details
                         $log.Date = Get-Date
                         $log.Action = "Batch processing started"
                         $log.Runtime = $null
@@ -1044,7 +1044,7 @@ Function Invoke-Ping
                         #endregion add scripts to runspace pool
                     }
                      
-                    Write-Verbose ( "Finish processing the remaining runspace jobs: {0}" -f ( @($runspaces | Where {$_.Runspace -ne $Null}).Count) )
+                    Write-Verbose ( "Finish processing the remaining runspace jobs: {0}" -f ( @($runspaces | Where {$Null -ne $_.Runspace }).Count) )
                     Get-RunspaceData -wait
 
                     if (-not $quiet) {
@@ -1208,7 +1208,7 @@ Function Invoke-Ping
 	                                }
 	                                catch
 	                                {
-		                                $rst = New-Object -TypeName PSObject -Property $Hash | Select -Property $props
+		                                $rst = New-Object -TypeName PSObject -Property $Hash | Select-Object -Property $props
 		                                $rst.name = $name
 		                                $results += $rst
 		                                $failed = 1
@@ -1218,7 +1218,7 @@ Function Invoke-Ping
 	                                    foreach($ip in $ips)
 	                                    {
 	    
-		                                    $rst = New-Object -TypeName PSObject -Property $Hash | Select -Property $props
+		                                    $rst = New-Object -TypeName PSObject -Property $Hash | Select-Object -Property $props
 	                                        $rst.name = $name
 		                                    $rst.ip = $ip
 		                                    $rst.domain = $domain
@@ -1298,7 +1298,7 @@ Function Invoke-Ping
 				                                    $w = [wmi] ''
 				                                    $w.psbase.options.timeout = 15000000
 				                                    $w.path = "\\$Name\root\cimv2:Win32_ComputerSystem.Name='$Name'"
-				                                    $w | select none | Out-Null
+				                                    $w | Select-Object none | Out-Null
 				                                    $rst.RPC = $true
 			                                    }
 			                                    catch
@@ -1362,8 +1362,8 @@ Function Invoke-Ping
                             $detail = "WSMan","RemoteReg","RPC","RDP","SMB" 
                         }
 
-                        $detail | Select -Unique | Foreach-Object { $TestServerParams.add($_,$True) }
-                        Test-Server @TestServerParams | Select -Property $( "Name", "IP", "Domain", "Ping" + $detail )
+                        $detail | Select-Object -Unique | Foreach-Object { $TestServerParams.add($_,$True) }
+                        Test-Server @TestServerParams | Select-Object -Property $( "Name", "IP", "Domain", "Ping" + $detail )
                 }
                 Catch
                 {
@@ -1379,7 +1379,7 @@ Function Invoke-Ping
                     $result = $null
                     if( $result = @( Test-Connection -ComputerName $computer -Count 2 -erroraction Stop ) )
                     {
-                        $Output = $result | Select -first 1 -Property Address,
+                        $Output = $result | Select-Object -first 1 -Property Address,
                                                                       IPV4Address,
                                                                       IPV6Address,
                                                                       ResponseTime,
@@ -1413,7 +1413,7 @@ Function Invoke-Ping
                             $status = "Error: $_"
                         }
 
-                        "" | Select -Property @{ label = "Address"; expression = {$computer} },
+                        "" | Select-Object -Property @{ label = "Address"; expression = {$computer} },
                                               IPV4Address,
                                               IPV6Address,
                                               ResponseTime,

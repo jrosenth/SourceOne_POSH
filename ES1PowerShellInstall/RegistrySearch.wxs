@@ -14,7 +14,7 @@
   <Fragment>
     <Property Id="INSTALLFOLDER" Secure="yes">
       <RegistrySearch Id="InstallFolderSearch"
-                      Key="SOFTWARE\[Manufacturer]\SourceOne_POSH"
+                      Key="SOFTWARE\EMC\SourceOne_POSH"
                       Name="InstallFolder"
                       Root="HKLM"
                       Type="directory" />
@@ -24,7 +24,7 @@
   <Fragment>
     <Property Id="S1INSTALLDIR" Secure="yes">
       <RegistrySearch Id="S1InstallFolderSearch"
-                      Key="SOFTWARE\[Manufacturer]\SourceOne"
+                      Key="SOFTWARE\EMC\SourceOne"
                       Name="InstallDir"
                       Root="HKLM"
                       Type="directory" />
