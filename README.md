@@ -38,8 +38,12 @@ Usage
 
 Installation
 =========================================
-There are two methods for installing the SourceOne Powershell.
+There are multiple methods for installing the SourceOne Powershell.
 
+ * The easiest method on most current versions of PowerShell:
+ ```powershell
+  Install-Module SourceOne_POSH
+ ```
  * Download and execute the Windows based installer (ES1PowerShellInstall.msi) on a machine with SourceOne installed on it.  It is recommended installing on the same machine as the SourceOne console application, but not required.
    The installer creates a desktop shortcut, installs the module into the SourceOne binary installation location and adds that location to the system environment variable PSModulePath making the module easily available to any PowerShell instance.
    The installer is based on the free and open source <a href="http://wixtoolset.org/"> WIX Toolset </a>
