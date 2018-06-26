@@ -5,6 +5,9 @@
             <Component Id="cmp075442F856D32D4EBB4D10F809658366" Guid="*">
                 <File Id="fil18695288BB06E6EF87950D58926C5BDF" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1POSH_HelperUtils.psm1" />
             </Component>
+            <Component Id="cmpA52E4025159FD10B9A2675B304535FE7" Guid="*">
+                <File Id="fil5DB45DAEDAAE063F992C19986756321C" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_ArchiveConfiguration.psm1" />
+            </Component>
             <Component Id="cmp209D2436A816B76E6997880E74DCD462" Guid="*">
                 <File Id="filC80914129CBB74694C33B4BDEC986C8A" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_ArchiveFolder.psm1" />
             </Component>
@@ -28,6 +31,9 @@
             </Component>
             <Component Id="cmp9A4FA6D846804B486C31FB685D4C7CF8" Guid="*">
                 <File Id="filFE982ED3024ADA283976262AD8289DB3" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IndexHealth.psm1" />
+            </Component>
+            <Component Id="cmp3C88CD5F431350CAF26BFE7EF653C4B3" Guid="*">
+                <File Id="fil26F3072E34D57E6A29CC1CBAEB462CB9" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_IndexUtils.psm1" />
             </Component>
             <Component Id="cmp00ACDACD812BD8A98D74D0C0FF1E7776" Guid="*">
                 <File Id="filFCB825E8A7AE858B3C075690E581A61F" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_Jobs.psm1" />
@@ -53,6 +59,9 @@
             <Component Id="cmpB5BE880F85EC3F4613C6E8A5C9109588" Guid="*">
                 <File Id="fil043AD17245665E0DC74C6986C12E95F4" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_VolumeHealth.psm1" />
             </Component>
+            <Component Id="cmp4AC094097384AC7C90B676307C9E240F" Guid="*">
+                <File Id="fil72307EF167959DEB99844F1237572070" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_VolumeUtils.psm1" />
+            </Component>
             <Component Id="cmp8C615EEC3C5334CDE78CAF9FC60A206D" Guid="*">
                 <File Id="filE2ABA92EEF91689866FEE0021F8A0452" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_WorkerRolesUtils.psm1" />
             </Component>
@@ -70,6 +79,7 @@
     <Fragment>
         <ComponentGroup Id="ModuleComponents">
             <ComponentRef Id="cmp075442F856D32D4EBB4D10F809658366" />
+            <ComponentRef Id="cmpA52E4025159FD10B9A2675B304535FE7" />
             <ComponentRef Id="cmp209D2436A816B76E6997880E74DCD462" />
             <ComponentRef Id="cmp7D1796F64B4D0B5ED912275F6A97B76E" />
             <ComponentRef Id="cmpD5EF54936B5F0FB57816AE1B5573A29F" />
@@ -78,6 +88,7 @@
             <ComponentRef Id="cmp3D19CE2E34721427F30B4E8C33C6083A" />
             <ComponentRef Id="cmpA16E9EE9A5821572FFD13533B756EB8B" />
             <ComponentRef Id="cmp9A4FA6D846804B486C31FB685D4C7CF8" />
+            <ComponentRef Id="cmp3C88CD5F431350CAF26BFE7EF653C4B3" />
             <ComponentRef Id="cmp00ACDACD812BD8A98D74D0C0FF1E7776" />
             <ComponentRef Id="cmp09F9AADCC6505EDBD91FFDC2C68E17F1" />
             <ComponentRef Id="cmp46AD9A848D4777A4A6F6080157A75676" />
@@ -86,6 +97,7 @@
             <ComponentRef Id="cmpCE3EF34E4626449D63095AD9428B4449" />
             <ComponentRef Id="cmp164D080885A953E9D86BA34D72013D05" />
             <ComponentRef Id="cmpB5BE880F85EC3F4613C6E8A5C9109588" />
+            <ComponentRef Id="cmp4AC094097384AC7C90B676307C9E240F" />
             <ComponentRef Id="cmp8C615EEC3C5334CDE78CAF9FC60A206D" />
             <ComponentRef Id="cmpED7C3F3093AD605E6DCB37BCE37FAFD5" />
             <ComponentRef Id="cmp1786AF0C95FD7315EFC1C6FE26B0D71D" />

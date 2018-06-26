@@ -74,6 +74,7 @@ PROCESS
 		#     May have to adjust the Version strings for other versions of S1
 		add-type -assemblyname "EMC.Interop.ExBase, Culture=neutral,Version=6.6.3.8,PublicKeyToken=D3CC2CEEAFB73BC1" -ErrorAction SilentlyContinue
 		add-type -assemblyname "EMC.Interop.ExSTLContainers, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1"  -ErrorAction SilentlyContinue
+		add-type -assemblyname "EMC.Interop.ExDataSet, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1"  -ErrorAction SilentlyContinue
 		add-type -assemblyname "EMC.Interop.ExASBaseAPI, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1" -ErrorAction SilentlyContinue
 		add-type -assemblyname "EMC.Interop.ExJDFAPI, Culture=neutral,Version=6.6.3.2,PublicKeyToken=D3CC2CEEAFB73BC1"  -ErrorAction SilentlyContinue
 		add-type -AssemblyName "EMC.Interop.ExASAdminAPI, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1" -ErrorAction SilentlyContinue

@@ -33,14 +33,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ES1POSHProfile.ps1" />
+    <Compile Include="Export-ObjectIDForFileMigration.ps1" />
+    <Compile Include="SourceOne_POSH\ES1_ArchiveConfiguration.psm1" />
     <Compile Include="SourceOne_POSH\ES1_ArchiveFolder.psm1" />
     <Compile Include="SourceOne_POSH\ES1_DefaultCSS.txt" />
     <Compile Include="SourceOne_POSH\ES1_HealthChecks.psm1" />
     <Compile Include="SourceOne_POSH\ES1_HTML.psm1" />
     <Compile Include="SourceOne_POSH\ES1_IndexHealth.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_IndexUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_MasterRoleUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_SuspendResume.psm1" />
     <Compile Include="SourceOne_POSH\ES1_VolumeHealth.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_VolumeUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_WorkerRolesUtils.psm1" />
     <Compile Include="SourceOne_POSH\ExternalUtils.psm1" />
     <Compile Include="SourceOne_POSH\folderdefaults.xml" />

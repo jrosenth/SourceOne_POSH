@@ -20,6 +20,10 @@
 		General Helper and convenience functions
 #>
 
+#
+# Global string for consistent logfile name across the entire module
+#
+$Global:S1LogFile="SourceOne_POSH"
 
 function Get-POSHVersionAndArchitecture{
 <#

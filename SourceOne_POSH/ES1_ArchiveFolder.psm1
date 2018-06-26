@@ -107,7 +107,7 @@ PROCESS {
 		$repo = $asmgr.GetRepository($ArchiveName)
 
 		$backendFolder = $repo.CreateNewObject([EMC.Interop.ExAsAdminAPI.exASObjectType]::exASObjectType_ArchiveFolder)
-        $backendFolder.SetTraceInfo('SourceOne_POSH')
+        $backendFolder.SetTraceInfo($Global:S1LogFile)
 
 		$backendFolder.FullPath = $FolderName
 		$backendFolder.ContainerLocation = $ContainerLocation
@@ -519,11 +519,11 @@ PROCESS {
 		Write-Verbose "Archive Name: $($ArchiveName), Archive Folder: $($FolderName)"
 
 	    $asmgr = new-object -ComObject ExAsAdminAPI.CoExASAdminAPI
-		$asmgr.SetTraceInfo('SourceOne_POSH')
+		$asmgr.SetTraceInfo($Global:S1LogFile)
         $asmgr.Initialize()
 
 		$repo=$asmgr.GetRepository($ArchiveName)
-	    $repo.SetTraceInfo('SourceOne_POSH')
+	    $repo.SetTraceInfo($Global:S1LogFile)
     
         $folderplan=$repo.GetFolderPlan()
 		
@@ -798,7 +798,7 @@ PROCESS {
 	foreach ($repo in $repos)
 	{
    
-		$repo.SetTraceInfo('SourceOne_POSH')
+		$repo.SetTraceInfo($Global:S1LogFile)
 
 		$folderplan=$repo.GetFolderPlan()
 		$folders = $folderplan.EnumerateArchiveFolders()

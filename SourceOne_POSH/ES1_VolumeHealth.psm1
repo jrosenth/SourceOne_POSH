@@ -26,10 +26,16 @@
 
 <#
 .SYNOPSIS
-  
-	Adapted from Mike Tramont's S1emVolMon.ps1 health check script
+	WORK IN PROGRESS - Not complete Examine the results closely !
+  	Adapted from Mike Tramont's S1emVolMon.ps1 health check script
+	  Gets the "health" status of SourceOne volumes by performing a series of checks on the volume,
+	  including looking for inconsistiencies in the SQL and file systems states.
 .DESCRIPTION
-   TBD
+   WORK IN PROGRESS - Not complete Examine the results closely !
+  	
+	Gets the "health" status of SourceOne volumes by performing a series of checks on the volume.
+	including looking for inconsistiencies in the SQL and file systems states.
+
 .OUTPUTS
 
 .EXAMPLE
@@ -37,75 +43,119 @@
 #>
 Function Get-ArchiveVolumeStatus
 {
-	[CmdletBinding()]
-	PARAM ()
+[CmdletBinding()]
+PARAM (
+	[Parameter(Mandatory=$false)]
+	[Alias('archive')]
+	[string[]] $ArchiveNames)
+
 BEGIN {
 		$scriptStart = Get-Date
 		$scriptDirectory  = Split-Path -parent $PSCommandPath
-}
+
+		$MyDebug = $false
+		# Do both these checks to take advantage of internal parsing of syntaxes like -Debug:$false
+		if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey("Debug") -and $PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent)
+		{
+			$DebugPreference = "Continue"
+			Write-Debug "Debug Output activated"
+			# for convenience
+			$MyDebug = $true
+		}
+
+		try {
+			[bool] $loaded = Add-ES1Types #-ErrorAction SilentlyContinue
+
+			if (-not $loaded )
+			{
+				Write-Error 'Error loading SourceOne Objects and Types'
+				break
+			}
+		}
+		catch
+		{
+			Write-Error $_ 
+			break
+		}
+
+
+	}
 
 PROCESS {
 
 	# TODO - Each one of the Foreach Server block can be parrallized 
+
 Try
 {
     $returnCode = 0
       
     #
     # Query "Open" Volumes with CCLIPS
-    #
+    #  (misnamed now that it works with Atmos IDs too )
     $hOpenWithCclip = @{}
     $aOpenWithCclip = @()
-	$Archives = Get-ES1ArchiveDatabases
+	
+	#$Archives = Get-ES1ArchiveDatabases
 
+	# Archives/Repositories are 1 per database
+	#   An Archive can have multiple archive folders with different storage types.  Some don't have Object IDs
+	#
+
+	$Archives=Get-ES1ArchiveConnection
+	
+	#
+	#TODO - use archive list on command line !
+	#
     foreach ($archive in $Archives)
     {
-       
+			# Get all the archive folders for this archive
+			$ArchiveFolders = Get-ES1ArchiveFolder -ArchiveName $archive.Name
+
             $dbName = $archive.DBName
             $dbServer = $archive.DBServer
-     
-            Add-Log "DATABASE $dbName on $dbServer`:  Querying Open Volumes with CClips"
-            
-            #
-            # Define SQL Query
-            #
-			# TODO - Add support for Atmos OIDs, the XML is different
-			#
-            $sqlQuery = @'
-SELECT VolStubXml.value('(/Cf/Gp/CCLIPID)[1]','nvarchar(max)') AS CCLIPID, VolumeName, VolumeFlags, MsgCount, CurrentUNCPath
-FROM Volume (NOLOCK)
-WHERE CurrentUNCPath NOT LIKE '%.emx' AND VolStubXml.value('(/Cf/Gp/CCLIPID)[1]','nvarchar(max)') <> 'NULL'
-ORDER BY VolumeName 
-'@
-    
-            $dtResults = Invoke-ES1SQLQuery $dbServer $dbName $sqlQuery
-            
-            if ($dtResults -ne $null)
-            {
-                foreach ($vol in $dtResults)
-                {          
-                    $year = $vol.VolumeName.SubString(0,4)
-                    $month = $vol.VolumeName.SubString(4,2)
-                    $day = $vol.VolumeName.SubString(6,2)
-                    $hour = $vol.VolumeName.SubString(8,2)    
-                    $minute = $vol.VolumeName.SubString(10,2) 
-                    $second = $vol.VolumeName.SubString(12,2)  
-                    $volCreateDateTime = Get-Date -Year $year -Month $month -Day $day -Hour $hour -Minute $minute -Second $second             
-                    $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays
-                    
-                    if ($volAgeDays -gt 1)
-                    {
-                        $aOpenWithCclip += $vol
-                        $hOpenWithCclip[$vol.VolumeName] = $True
-                    }               
-                }            
-            }                            
-       
-    }
-    Add-Log ("Open Volumes With Centera CCLIPS:  " + $hOpenWithCclip.Count)    
-    
+			foreach ($arFolder in $ArchiveFolders )
+			{
+				Write-Verbose "Processing: $($archive.Name) folder : $($arFolder.Name)"
+				#
+				# The ViPR variants could include ECS backends too
+				#
+
+				if (($arFolder.StorageType -eq [EMC.Interop.ExASBaseAPI.exASFolderStorageType]::exASStorageType_CenteraContainer) -or `
+				     ($arFolder.StorageType -eq [EMC.Interop.ExASBaseAPI.exASFolderStorageType]::exASStorageType_ViPRCASContainer))
+				{
+					# Handle regular CAS and ViPR CAS the same
+					# Do special Centera Clip checks
+
+					# 
+					$retVals = Test-OpenVolumeHasCClip -ArchiveDbServer $dbServer -ArchiveDbName $dbName -ArchiveFolderID $arFolder.NodeID
+					$hOpenWithCclip += $retVals[0]
+					$aOpenWithCclip += $retVals[1]
+
+				}
+
+				if (($arFolder.StorageType -eq [EMC.Interop.ExASBaseAPI.exASFolderStorageType]::exASStorageType_AtmosContainer ) -or `
+					($arFolder.StorageType -eq [EMC.Interop.ExASBaseAPI.exASFolderStorageType]::exASStorageType_ViPRAtmosContainer))
+				{
+					# Do special Atmos Clip checks
+					$retVals = Test-OpenVolumeHasOID -ArchiveDbServer $dbServer -ArchiveDbName $dbName -ArchiveFolderID $arFolder.NodeID
+					$hOpenWithCclip += $retVals[0]
+					$aOpenWithCclip += $retVals[1]
+
+				}
+
+			}
+			
+
+		# MOVED  "Open volumes with a CCLip" check to function  - Test-OpenVolumeHasCClip
+
+
+
+		}
+
+
+
     #
-    # Get Volumes in Error State
+    # Get Volumes in Error State    - TODO Test-VolumeHasError (Get-ES1VolumeByState  -States FAILED )
     #
     $volumeResults = @()
   
@@ -290,13 +340,8 @@ WHERE (VolumeFlags & 4) = 4 AND CurrentUNCPath LIKE '%.emx' AND LEN(CAST(VolStub
         {
             $aValues = $vol.Split('\')
             $volname = $aValues[$aValues.Length - 1]
-            $year = $volname.SubString(0,4)
-            $month = $volname.SubString(4,2)
-            $day = $volname.SubString(6,2)
-            $hour = $volname.SubString(8,2)    
-            $minute = $volname.SubString(10,2) 
-            $second = $volname.SubString(12,2)
-            $volCreateDateTime = Get-Date -Year $year -Month $month -Day $day -Hour $hour -Minute $minute -Second $second        
+			$volCreateDateTime = [datetime]::ParseExact($volname.VolumeName,'yyyyMMddHHmmss',$null)
+            
             $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays
 
             if ($volAgeDays -gt 1)
@@ -335,13 +380,8 @@ WHERE (VolumeFlags & 4) = 4 And CurrentUNCPath NOT LIKE '%.emx'
             {
                 foreach ($vol in $dtResults)
                 {          
-                    $year = $vol.VolumeName.SubString(0,4)
-                    $month = $vol.VolumeName.SubString(4,2)
-                    $day = $vol.VolumeName.SubString(6,2)
-                    $hour = $vol.VolumeName.SubString(8,2)    
-                    $minute = $vol.VolumeName.SubString(10,2) 
-                    $second = $vol.VolumeName.SubString(12,2)  
-                    $volCreateDateTime = Get-Date -Year $year -Month $month -Day $day -Hour $hour -Minute $minute -Second $second             
+                    $volCreateDateTime = [datetime]::ParseExact($vol.VolumeName,'yyyyMMddHHmmss',$null)
+
                     $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays
                     
                     if ($volAgeDays -gt 1)
@@ -401,15 +441,7 @@ WHERE (VolumeFlags & 4) <> 4 And CurrentUNCPath NOT LIKE '%.emx'
     $aOldOpenVolumes = @()
     foreach ($vol in $aOpenVolumes)
     {   
-        $year = $vol.VolumeName.SubString(0,4)
-        $month = $vol.VolumeName.SubString(4,2)
-        $day = $vol.VolumeName.SubString(6,2)
-        $hour = $vol.VolumeName.SubString(8,2)    
-        $minute = $vol.VolumeName.SubString(10,2) 
-        $second = $vol.VolumeName.SubString(12,2)
-        
-        $volCreateDateTime = Get-Date -Year $year -Month $month -Day $day -Hour $hour -Minute $minute -Second $second
-        
+        $volCreateDateTime = [datetime]::ParseExact($vol.VolumeName,'yyyyMMddHHmmss',$null)
         $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays    
         
         if (! (Test-Path $vol.CurrentUNCPath))
@@ -455,13 +487,8 @@ ORDER BY CurrentUNCPath
             {
                 foreach ($vol in $dtResults)
                 {          
-                    $year = $vol.VolumeName.SubString(0,4)
-                    $month = $vol.VolumeName.SubString(4,2)
-                    $day = $vol.VolumeName.SubString(6,2)
-                    $hour = $vol.VolumeName.SubString(8,2)    
-                    $minute = $vol.VolumeName.SubString(10,2) 
-                    $second = $vol.VolumeName.SubString(12,2)  
-                    $volCreateDateTime = Get-Date -Year $year -Month $month -Day $day -Hour $hour -Minute $minute -Second $second             
+                    
+					$volCreateDateTime = [datetime]::ParseExact($vol.VolumeName,'yyyyMMddHHmmss',$null)            
                     $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays
                     
                     if ($volAgeDays -gt 1)
@@ -505,7 +532,132 @@ ORDER BY CurrentUNCPath
 	#List of Volumes without an assigned Index
 	$aVolumesNoIndex
 }
+
 END {}
+}
+
+# Internal helper routine
+function Test-OpenVolumeHasCClip
+{
+[CmdletBinding()]
+PARAM (	[Parameter(Mandatory=$true)]
+		[string] $ArchiveDbServer,
+		[Parameter(Mandatory=$true)]
+		[string] $ArchiveDbName,
+		[Parameter(Mandatory=$true)]
+		[int] $ArchiveFolderID
+
+)
+BEGIN {}
+
+PROCESS {
+	#
+    # Query "Open" Volumes with CCLIPS
+    #
+    $hretOpenWithCclip = @{}
+    $aretOpenWithCclip = @()
+
+         #
+         # Define SQL Query  try all volumes for this archive folder
+         $sqlQueryCAS = @'
+SELECT VolStubXml.value('(/Cf/Gp/CCLIPID)[1]','nvarchar(max)') AS CCLIPID, VolumeName, VolumeFlags, MsgCount, CurrentUNCPath
+FROM Volume (NOLOCK)
+WHERE CurrentUNCPath NOT LIKE '%.emx' AND VolStubXml.value('(/Cf/Gp/CCLIPID)[1]','nvarchar(max)') <> 'NULL' 
+AND FolderNodeID in (select folderid from FolderPlan (NOLOCK) where parentid=@FOLDERID)
+ORDER BY VolumeName 
+'@
+            
+			Write-Verbose " Querying Open Volumes with CClips: DATABASE $($ArchiveDbName) on $($ArchiveDbServer) FolderID $($ArchiveFolderID)"
+
+            $dtResults = @(Invoke-ES1SQLQueryParams $dbServer $dbName $sqlQueryCAS -parameters @{FOLDERID=$ArchiveFolderID})
+            
+            if ($dtResults -ne $null)
+            {
+                foreach ($vol in $dtResults)
+                {          
+					$volCreateDateTime = [datetime]::ParseExact($vol.VolumeName,'yyyyMMddHHmmss',$null)
+                                        
+                    $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays
+                    
+                    if ($volAgeDays -gt 1)
+                    {
+                        $aretOpenWithCclip += $vol
+                        $hretOpenWithCclip[$vol.VolumeName] = $True
+                    }               
+                }            
+            }                            
+
+    
+	Write-Verbose ("Open Volumes With Centera CCLIPS:  " + $hretOpenWithCclip.Count)    
+
+    $hretOpenWithCclip 
+    $aretOpenWithCclip 
+
+}
+
+END{}
+
+}
+function Test-OpenVolumeHasOID
+{
+[CmdletBinding()]
+PARAM (	[Parameter(Mandatory=$true)]
+		[string] $ArchiveDbServer,
+		[Parameter(Mandatory=$true)]
+		[string] $ArchiveDbName,
+		[Parameter(Mandatory=$true)]
+		[int] $ArchiveFolderID
+
+)
+BEGIN {}
+
+PROCESS {
+	#
+    # Query "Open" Volumes with Atmos object IDs
+    #
+    $hretOpenWithCclip = @{}
+    $aretOpenWithCclip = @()
+
+         #
+         # Define SQL Query  try all volumes for this archive folder
+         $sqlQueryOID = @'
+SELECT VolStubXml.value('(/Atmos/OID)[1]','nvarchar(max)') AS OID, VolumeName, VolumeFlags, MsgCount, CurrentUNCPath
+FROM Volume (NOLOCK)
+WHERE CurrentUNCPath NOT LIKE '%.emx' AND VolStubXml.value('(/Atmos/OID)[1]','nvarchar(max)') <> 'NULL' 
+AND FolderNodeID in (select folderid from FolderPlan (NOLOCK) where parentid=@FOLDERID)
+ORDER BY VolumeName 
+'@
+            
+			Write-Verbose " Querying Open Volumes with OIDs: DATABASE $($ArchiveDbName) on $($ArchiveDbServer) FolderID $($ArchiveFolderID)"
+
+            $dtResults = @(Invoke-ES1SQLQueryParams $dbServer $dbName $sqlQueryOID -parameters @{FOLDERID=$ArchiveFolderID})
+            
+            if ($dtResults -ne $null)
+            {
+                foreach ($vol in $dtResults)
+                {          
+					$volCreateDateTime = [datetime]::ParseExact($vol.VolumeName,'yyyyMMddHHmmss',$null)
+                                        
+                    $volAgeDays = ($scriptStart).subtract($volCreateDateTime).TotalDays
+                    
+                    if ($volAgeDays -gt 1)
+                    {
+                        $aretOpenWithCclip += $vol
+                        $hretOpenWithCclip[$vol.VolumeName] = $True
+                    }               
+                }            
+            }                            
+
+    
+	Write-Verbose ("Open Volumes With Atmos OIDs:  " + $hretOpenWithCclip.Count)    
+
+    $hretOpenWithCclip 
+    $aretOpenWithCclip 
+
+}
+
+END{}
+
 }
 
 Export-ModuleMember -Function * -Alias *

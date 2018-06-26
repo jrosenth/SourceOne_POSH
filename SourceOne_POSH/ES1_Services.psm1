@@ -47,15 +47,18 @@ function Get-ES1Services
 {
 <#
 .SYNOPSIS
- Get-ES1Services
+	Get a list of SourceOne Services on the specified Server(s)
 .DESCRIPTION
-Get a list of SourceOne Services on the specified Server(s)
-.PARAMETER <ComputerName>
-Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer
-. The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
-.PARAMETER <Credential>
-Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by th
-e Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
+	Get a list of SourceOne Services on the specified Server(s)
+.PARAMETER ComputerName
+	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, 
+	a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to specify the local computer.
+	The local computer is the default. When the remote computer is in a different domain from the user, you must use a fully qualified 
+	domain Name. This parameter can also be piped to the cmdlet.
+.PARAMETER Credential
+	Specifies a user account that has permission to perform this action. The default is the current user. Type a user Name, 
+	such as "User01", "Domain01\User01", or user@Contoso.com. Or, enter a PSCredential object, such as an object that is returned by the
+	Get-Credential cmdlet. When you Type a user Name, you will be prompted for a Password.
 .EXAMPLE
 Get-ES1Services 
 
@@ -124,7 +127,8 @@ function Show-ES1Services
 	Displays a list of SourceOne Services on the specified Server(s)
 
 .PARAMETER ComputerName
-	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to 
+	Specifies the computer against which you want to run the management operation. The Value can be a fully qualified domain Name, 
+	a NetBIOS Name, or an IP address. Use the local computer Name, use localhost, or use a dot (.) to 
 	specify the local computer. The local computer is the default. When the remote computer is in a different domain from the user, 
 	you must use a fully qualified domain Name. This parameter can also be piped to the cmdlet.
 
