@@ -38,6 +38,9 @@
             <Component Id="cmp00ACDACD812BD8A98D74D0C0FF1E7776" Guid="*">
                 <File Id="filFCB825E8A7AE858B3C075690E581A61F" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_Jobs.psm1" />
             </Component>
+            <Component Id="cmp5F9E35FD2DA13A298DF972FF601F6BA2" Guid="*">
+                <File Id="fil08B6E3EC994CDA87354E55E2A9F2D8E7" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_MappedFolder.psm1" />
+            </Component>
             <Component Id="cmp09F9AADCC6505EDBD91FFDC2C68E17F1" Guid="*">
                 <File Id="fil9E47C37CAA75C5CCEDA7C3493DE775FA" KeyPath="yes" Source="$(var.ES1POSHFILES)\ES1_MasterRoleUtils.psm1" />
             </Component>
@@ -90,6 +93,7 @@
             <ComponentRef Id="cmp9A4FA6D846804B486C31FB685D4C7CF8" />
             <ComponentRef Id="cmp3C88CD5F431350CAF26BFE7EF653C4B3" />
             <ComponentRef Id="cmp00ACDACD812BD8A98D74D0C0FF1E7776" />
+            <ComponentRef Id="cmp5F9E35FD2DA13A298DF972FF601F6BA2" />
             <ComponentRef Id="cmp09F9AADCC6505EDBD91FFDC2C68E17F1" />
             <ComponentRef Id="cmp46AD9A848D4777A4A6F6080157A75676" />
             <ComponentRef Id="cmp91D9D6650F57B0001FAEB55E3ED473BA" />

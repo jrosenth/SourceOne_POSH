@@ -22,7 +22,7 @@
 
 #>
 
-#requires -Version 4
+#requires -Version 3
 
 <#
 .SYNOPSIS

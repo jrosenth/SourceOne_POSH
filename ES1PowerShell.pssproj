@@ -41,6 +41,7 @@
     <Compile Include="SourceOne_POSH\ES1_HTML.psm1" />
     <Compile Include="SourceOne_POSH\ES1_IndexHealth.psm1" />
     <Compile Include="SourceOne_POSH\ES1_IndexUtils.psm1" />
+    <Compile Include="SourceOne_POSH\ES1_MappedFolder.psm1" />
     <Compile Include="SourceOne_POSH\ES1_MasterRoleUtils.psm1" />
     <Compile Include="SourceOne_POSH\ES1_SuspendResume.psm1" />
     <Compile Include="SourceOne_POSH\ES1_VolumeHealth.psm1" />

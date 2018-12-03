@@ -20,7 +20,7 @@
 
 #>
 
-#requires -Version 4
+#requires -Version 3
 
 <#
 .SYNOPSIS
@@ -474,7 +474,7 @@ $Script:emcRegLoc
 
 <#
 .SYNOPSIS
-   Returns a string containing the full path of the SourceOne install directory on tghe current machine.  This is obtained from the 
+   Returns a string containing the full path of the SourceOne install directory on the current machine.  This is obtained from the 
    Windows registry.
 
 .DESCRIPTION
@@ -750,34 +750,40 @@ function Get-ES1ServerList
 param()
 $serverList = @()
 
-Write-verbose $Script:s1Archivers.count
+Write-verbose "Start - Number of Archivers $($Script:s1Archivers.count) "
 
 if ($Script:s1Archivers.count -eq 0)
 {
-	$Script:s1Archivers = Get-ES1Archivers
+	Write-Verbose "Getting archive servers..."
+	$Script:s1Archivers = @(Get-ES1Archivers)
 }
 
-Write-verbose $Script:s1Archivers.count
+Write-verbose "Number of Archivers found : $($Script:s1Archivers.count) "
+
 foreach ($server in $Script:s1Archivers)
 {
-	Write-Verbose $server
+	Write-Verbose "Archiver Server : $($server)"
 	$props = @{computername=$server}
 	$obj = New-Object -TypeName psobject -Property $props
 	$serverList += $obj
 }
 
-Write-Verbose $Script:s1workers.count
+#
+# s1Workers is exported from ES1_WorkerRolesUtils.psm1
+#
+Write-Verbose "Number of workers: $($Script:s1workers.count)"
 if ($Script:s1Workers.count -eq 0)
 {
-	$Script:s1Workers = Get-ES1Workers
+	Write-Verbose "Getting worker servers..."
+	$Script:s1Workers = @(Get-ES1Workers)
 }
-
 
 foreach ($s in $Script:s1Workers)
 {
 
 	$server = $s.servername.tostring()
-	Write-Verbose $s
+	Write-Verbose "Worker Server: $($s | out-string )"
+
 	$parts = $server.split('.')
 	$props = @{computername=$parts[0]}
 	$obj = New-Object -TypeName psobject -Property $props
@@ -785,7 +791,8 @@ foreach ($s in $Script:s1Workers)
 
 }
 
-write-verbose $serverlist.ToString()
+write-verbose "Server List before dedup $($serverlist | Out-String)" 
+
 $Script:s1serverList = $serverList | Select-Object computername -uniq 
 $Script:s1serverList
 
@@ -793,11 +800,11 @@ $Script:s1serverList
 
 <#
 .SYNOPSIS
-   Get-ES1Servers
+   Retrieve a list/array of all SourceOne servers (workers and archivers)
 .DESCRIPTION
    Retrieve a list/array of all SourceOne servers (workers and archivers)
-.OUTPUTS
-  Sets a session (global) array called $s1Servers with 
+.OUTPUTS s1servers
+  Sets a session (global) array called $s1Servers with machine name of all workers and archiver servers
 
 .EXAMPLE
    Get-ES1Servers
@@ -1052,7 +1059,12 @@ function Get-ES1AgentListObjs
 {
 [CmdletBinding()]
 param
-()
+([Parameter(Mandatory=$false,
+		ValueFromPipeLine=$true, 
+		ValueFromPipeLineByPropertyName=$true)]
+	[string[]]$ComputerArray )
+
+# TODO - Finish implementing the $ComputerArray ...
 
 $Script:s1InstallObjects=@()
 

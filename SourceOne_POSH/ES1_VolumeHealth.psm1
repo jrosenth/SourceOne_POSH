@@ -109,7 +109,7 @@ Try
     foreach ($archive in $Archives)
     {
 			# Get all the archive folders for this archive
-			$ArchiveFolders = Get-ES1ArchiveFolder -ArchiveName $archive.Name
+			$ArchiveFolders = Get-ES1ArchiveFolder -ArchiveName $archive.ArchiveName
 
             $dbName = $archive.DBName
             $dbServer = $archive.DBServer

@@ -78,6 +78,8 @@ PROCESS
 		add-type -assemblyname "EMC.Interop.ExASBaseAPI, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1" -ErrorAction SilentlyContinue
 		add-type -assemblyname "EMC.Interop.ExJDFAPI, Culture=neutral,Version=6.6.3.2,PublicKeyToken=D3CC2CEEAFB73BC1"  -ErrorAction SilentlyContinue
 		add-type -AssemblyName "EMC.Interop.ExASAdminAPI, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1" -ErrorAction SilentlyContinue
+		add-type -AssemblyName "EMC.Interop.ExProviderGW, Culture=neutral,Version=6.6.3.1,PublicKeyToken=D3CC2CEEAFB73BC1" -ErrorAction SilentlyContinue
+
         $success = $true
 	}
 	catch {

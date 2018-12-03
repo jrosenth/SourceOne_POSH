@@ -361,7 +361,12 @@ SecondIPM   IPMArchive2.qagsxpdc.com          14 {Index, Query, Retrieval}
 
 		if ($ArchiveName)
 		{
-			$ASRepos = @($asmgr.GetRepository($ArchiveName))
+			 try {
+			    $ASRepos = @($asmgr.GetRepository($ArchiveName))
+            }
+            catch {
+                throw "Error getting repository for connection $($ArchiveName).  Check the name "
+            }
 		}
 		else
 		{
@@ -476,7 +481,12 @@ function Get-ES1ArchiveServerConfig
 
 		if ($ArchiveName)
 		{
-			$ASRepos = @($asmgr.GetRepository($ArchiveName))
+			 try {
+			    $ASRepos = @($asmgr.GetRepository($ArchiveName))
+            }
+            catch {
+                throw "Error getting repository for connection $($ArchiveName).  Check the name "
+            }
 		}
 		else
 		{
