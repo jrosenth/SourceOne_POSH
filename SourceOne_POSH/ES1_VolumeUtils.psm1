@@ -86,6 +86,7 @@ PROCESS {
 	$asmgr.Initialize()
 
     $closedVolumes=@()
+	[System.Runtime.InteropServices.UnknownWrapper]$nullWrapper = New-Object "System.Runtime.InteropServices.UnknownWrapper" -ArgumentList @($null);
 
 	# Check for active Policy and  activities that could conflict with a close
     $activities = Get-ES1Activities 
@@ -130,9 +131,7 @@ PROCESS {
             }
 		}
 
-		# dummy object because need to pass something but its not actually used
-		$asFilter = $repo.CreateNewObject([EMC.Interop.ExAsAdminAPI.exASObjectType]::exASObjectType_ArchiveFolder)
-
+		
 		foreach ($folder in $folders)
 		{
 			$containerfolders=$folder.EnumerateContainerFolders()
@@ -140,7 +139,7 @@ PROCESS {
 			{
 				$cf.SetTraceInfo($Global:S1LogFile)
 
-				$volumes=$cf.EnumerateVolumes($asFilter)
+				$volumes=$cf.EnumerateVolumes($nullWrapper)
 
 				# loop through all the volumes and if it is open then close it.
 				foreach($volume in $volumes)
@@ -286,6 +285,7 @@ PROCESS {
 	$asmgr.Initialize()
 
     $RetVolumes=@()
+	[System.Runtime.InteropServices.UnknownWrapper]$nullWrapper = New-Object "System.Runtime.InteropServices.UnknownWrapper" -ArgumentList @($null);
 
 	# build a mask of the flags we're looking for
 	[int] $volFlags= [EMC.Interop.ExAsBaseAPI.exASVolumeFlags]::exASVolumeFlagDefault
@@ -318,15 +318,13 @@ PROCESS {
             }
 		}
 
-		# dummy object because need to pass something but its not actually used
-		$asFilter = $repo.CreateNewObject([EMC.Interop.ExAsAdminAPI.exASObjectType]::exASObjectType_ArchiveFolder)
-
+		
 		foreach ($folder in $folders)
 		{
 			$containerfolders=$folder.EnumerateContainerFolders()
 			foreach ($cf in $containerfolders)
 			{
-				$volumes=$cf.EnumerateVolumes($asFilter)
+				$volumes=$cf.EnumerateVolumes($nullWrapper)
 
 				# loop through all the volumes 
 				foreach($volume in $volumes)
