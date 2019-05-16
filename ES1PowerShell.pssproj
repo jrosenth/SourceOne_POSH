@@ -34,6 +34,7 @@
   <ItemGroup>
     <Compile Include="ES1POSHProfile.ps1" />
     <Compile Include="Export-ObjectIDForFileMigration.ps1" />
+    <Compile Include="GetArchiveInfoForMigration.ps1" />
     <Compile Include="SourceOne_POSH\ES1_ArchiveConfiguration.psm1" />
     <Compile Include="SourceOne_POSH\ES1_ArchiveFolder.psm1" />
     <Compile Include="SourceOne_POSH\ES1_DefaultCSS.txt" />
